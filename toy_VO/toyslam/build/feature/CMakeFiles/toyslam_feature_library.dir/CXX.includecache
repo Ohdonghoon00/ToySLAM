@@ -1,0 +1,16 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/feature/aligner.cpp
+
+/home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/feature/keypoint.cpp
+keypoint.h
+/home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/feature/keypoint.h
+
+/home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/feature/keypoint.h
+

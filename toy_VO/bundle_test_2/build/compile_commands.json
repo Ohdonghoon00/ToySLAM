@@ -1,0 +1,22 @@
+[
+{
+  "directory": "/home/donghoon/toy_VO_from_Scratch/toy_VO/bundle_test_2/build",
+  "command": "/usr/bin/g++-7   -isystem /usr/local/include/opencv4  -O3 -DNDEBUG   -o CMakeFiles/5local_ba_test.dir/5local_ba_test.cpp.o -c /home/donghoon/toy_VO_from_Scratch/toy_VO/bundle_test_2/5local_ba_test.cpp",
+  "file": "/home/donghoon/toy_VO_from_Scratch/toy_VO/bundle_test_2/5local_ba_test.cpp"
+},
+{
+  "directory": "/home/donghoon/toy_VO_from_Scratch/toy_VO/bundle_test_2/build",
+  "command": "/usr/bin/g++-7   -isystem /usr/local/include/opencv4  -O3 -DNDEBUG   -o CMakeFiles/5local_ba_test.dir/math.cpp.o -c /home/donghoon/toy_VO_from_Scratch/toy_VO/bundle_test_2/math.cpp",
+  "file": "/home/donghoon/toy_VO_from_Scratch/toy_VO/bundle_test_2/math.cpp"
+},
+{
+  "directory": "/home/donghoon/toy_VO_from_Scratch/toy_VO/bundle_test_2/build",
+  "command": "/usr/bin/g++-7   -isystem /usr/local/include/opencv4  -O3 -DNDEBUG   -o CMakeFiles/final_BA.dir/final_BA.cpp.o -c /home/donghoon/toy_VO_from_Scratch/toy_VO/bundle_test_2/final_BA.cpp",
+  "file": "/home/donghoon/toy_VO_from_Scratch/toy_VO/bundle_test_2/final_BA.cpp"
+},
+{
+  "directory": "/home/donghoon/toy_VO_from_Scratch/toy_VO/bundle_test_2/build",
+  "command": "/usr/bin/g++-7   -isystem /usr/local/include/opencv4  -O3 -DNDEBUG   -o CMakeFiles/final_BA.dir/math.cpp.o -c /home/donghoon/toy_VO_from_Scratch/toy_VO/bundle_test_2/math.cpp",
+  "file": "/home/donghoon/toy_VO_from_Scratch/toy_VO/bundle_test_2/math.cpp"
+}
+]
