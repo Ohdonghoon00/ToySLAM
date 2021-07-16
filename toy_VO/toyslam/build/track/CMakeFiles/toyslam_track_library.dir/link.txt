@@ -1,0 +1,2 @@
+/usr/bin/ar qc libtoyslam_track_library.a  CMakeFiles/toyslam_track_library.dir/epipolar.cpp.o CMakeFiles/toyslam_track_library.dir/solvePnP.cpp.o
+/usr/bin/ranlib libtoyslam_track_library.a

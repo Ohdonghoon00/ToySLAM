@@ -1,0 +1,2 @@
+/usr/bin/ar qc libtoyslam_feature_library.a  CMakeFiles/toyslam_feature_library.dir/aligner.cpp.o CMakeFiles/toyslam_feature_library.dir/keypoint.cpp.o
+/usr/bin/ranlib libtoyslam_feature_library.a

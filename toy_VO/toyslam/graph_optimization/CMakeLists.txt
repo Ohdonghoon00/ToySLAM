@@ -1,6 +1,5 @@
-# find_package(OpenCV REQUIRED)
-# include_directories(${OpenCV_INCLUDE_DIRS})
 
+find_package(g2o REQUIRED)
 
 
 option(BUILD_DBoW2   "Build DBoW2"            ON)
@@ -10,10 +9,21 @@ set(HDRS
   DBoW2/include/DBoW2/QueryResults.h        DBoW2/include/DBoW2/TemplatedDatabase.h   DBoW2/include/DBoW2/FORB.h
   DBoW2/include/DBoW2/DBoW2.h               DBoW2/include/DBoW2/FClass.h              DBoW2/include/DBoW2/FeatureVector.h
   DBoW2/include/DBoW2/ScoringObject.h       DBoW2/include/DBoW2/TemplatedVocabulary.h)
-set(SRCS 
+
+  set(SRCS 
   DBoW2/src/BowVector.cpp     DBoW2/src/FBrief.cpp        DBoW2/src/FORB.cpp
   DBoW2/src/FeatureVector.cpp DBoW2/src/QueryResults.cpp  DBoW2/src/ScoringObject.cpp)
 
+set(G2O_LIBS
+  g2o_core 
+  g2o_types_sba 
+  g2o_types_slam3d
+  g2o_solver_csparse 
+  g2o_stuff 
+  g2o_csparse_extension
+  g2o_solver_cholmod
+  cholmod
+)
 
 if(BUILD_DBoW2)
   set(LIB_SHARED "SHARED")
@@ -34,7 +44,6 @@ add_library(toyslam_graph_optimization_library
 
 target_link_libraries(toyslam_graph_optimization_library DBoW2
     ${CSPARSE_LIBRARY}
-    g2o_core g2o_stuff g2o_types_sba g2o_types_slam3d 
-    g2o_csparse_extension g2o_solver_csparse
-    cholmod g2o_solver_cholmod
+    ${G2O_LIBS}
+
 )

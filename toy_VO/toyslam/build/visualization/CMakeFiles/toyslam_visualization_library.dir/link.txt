@@ -1,0 +1,2 @@
+/usr/bin/ar qc libtoyslam_visualization_library.a  CMakeFiles/toyslam_visualization_library.dir/image_viewer.cpp.o CMakeFiles/toyslam_visualization_library.dir/map_viewer.cpp.o
+/usr/bin/ranlib libtoyslam_visualization_library.a

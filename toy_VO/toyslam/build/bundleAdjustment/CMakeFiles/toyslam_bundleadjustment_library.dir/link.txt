@@ -1,0 +1,2 @@
+/usr/bin/ar qc libtoyslam_bundleadjustment_library.a  
+/usr/bin/ranlib libtoyslam_bundleadjustment_library.a

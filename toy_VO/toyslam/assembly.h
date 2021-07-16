@@ -7,8 +7,7 @@
 #include "types/Map.h"
 #include "graph_optimization/pose_graph.h"
 #include "visualization/map_viewer.h"
+#include "bundleAdjustment/BundleAdjustment.h"
 
-
-// #include "math.h"
-
-// #include "Bundleadjustment.h"
+#include "DBoW2.h"
+#include "math.h"

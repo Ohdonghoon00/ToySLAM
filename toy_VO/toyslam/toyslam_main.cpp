@@ -1,6 +1,6 @@
-#include "DBoW2.h"
+
 #include "assembly.h"
-#include "math.h"
+
 
 
 #include "opencv2/opencv.hpp"
@@ -17,12 +17,15 @@
 #include <opencv2/highgui.hpp>
 #include <opencv2/features2d.hpp>
 #include <Eigen/Dense>
-#include "glog/logging.h"
+
+#include "ceres/ceres.h"
+
 
 using namespace std;
 using namespace cv;
 using namespace DBoW2;
-// using ceres::CauchyLoss;
+using ceres::CauchyLoss;
+using ceres::HuberLoss;
 
 
 
@@ -125,6 +128,8 @@ int main(int argc, char **argv)
     // Storage Storage_frame;
     std::vector<cv::Mat> inlier_storage;    
     std::vector<Frame> frame_storage;
+    std::vector<cv::Mat> GT_Storage;
+    std::vector<cv::Mat> draw_campose;
     Map map_storage;
 
 
@@ -290,13 +295,20 @@ std::cout << " map_point size after remove solvepnp outlier : " <<  map_point.si
                 // pose graph
 
                 // create linear solver
-                std::unique_ptr<g2o::BlockSolverX::LinearSolverType> linear_solver = 
-                g2o::make_unique<g2o::LinearSolverDense<g2o::BlockSolverX::PoseMatrixType>>();
+                std::unique_ptr<g2o::BlockSolver_7_3::LinearSolverType> linear_solver = 
+                g2o::make_unique<g2o::LinearSolverDense<g2o::BlockSolver_7_3::PoseMatrixType>>();
                
                     
                 // create block solver                            
-                std::unique_ptr<g2o::BlockSolverX> block_solver =
-                g2o::make_unique<g2o::BlockSolverX>(std::move(linear_solver));
+                std::unique_ptr<g2o::BlockSolver_7_3> block_solver =
+                g2o::make_unique<g2o::BlockSolver_7_3>(std::move(linear_solver));
+
+                g2o::OptimizationAlgorithm* algorithm
+                = new g2o::OptimizationAlgorithmLevenberg(std::move(block_solver));
+
+                g2o::SparseOptimizer* optimizer = new g2o::SparseOptimizer;
+                optimizer->setAlgorithm(algorithm);
+                optimizer->setVerbose(true);
 
                     
                 
@@ -386,28 +398,28 @@ std::cout << " same point :  " << same_point_num << " different point num  : " <
 
                 // BA initialize
                 // Define CostFunction
-                // ceres::Problem initilize_ba;
+                ceres::Problem initilize_ba;
 
-                // for ( int i = 0; i < map_storage.keyframe[0].pts.size(); i++)
-                // {
-                //     ceres::CostFunction* cost_func = ReprojectionError::create(map_storage.keyframe[0].pts[i], f, cv::Point2d(c.x, c.y));
-                //     double* camera = (double*)(&map_storage.keyframe[0].cam_pose);
-                //     double* X_ = (double*)(&(map_storage.world_xyz[i]));
-                //     initilize_ba.AddResidualBlock(cost_func, NULL, camera, X_); 
-                // }            
+                for ( int i = 0; i < map_storage.keyframe[0].pts.size(); i++)
+                {
+                    ceres::CostFunction* cost_func = ReprojectionError::create(map_storage.keyframe[0].pts[i], f, cv::Point2d(c.x, c.y));
+                    double* camera = (double*)(&map_storage.keyframe[0].cam_pose);
+                    double* X_ = (double*)(&(map_storage.world_xyz[i]));
+                    initilize_ba.AddResidualBlock(cost_func, NULL, camera, X_); 
+                }            
                             
-                // // ceres option       
-                // ceres::Solver::Options options;
-                // options.linear_solver_type = ceres::ITERATIVE_SCHUR;
-                // options.num_threads = 8;
-                // options.minimizer_progress_to_stdout = true;
-                // ceres::Solver::Summary summary;
+                // ceres option       
+                ceres::Solver::Options options;
+                options.linear_solver_type = ceres::ITERATIVE_SCHUR;
+                options.num_threads = 8;
+                options.minimizer_progress_to_stdout = true;
+                ceres::Solver::Summary summary;
 
                 // std::cout << " camera cam pose before intialize ba " << endl <<vec6d_to_homogenous_campose(map_storage.keyframe[0].cam_pose) << endl;
 
-                // ceres::Solve(options, &initilize_ba, &summary);
+                ceres::Solve(options, &initilize_ba, &summary);
 
-                // std::cout << " camera cam pose after intialize ba " << endl <<vec6d_to_homogenous_campose(map_storage.keyframe[0].cam_pose) << endl;
+                std::cout << " camera cam pose after intialize ba " << endl <<vec6d_to_homogenous_campose(map_storage.keyframe[0].cam_pose) << endl;
             
                 // Reprojection 3D to 2D current image
                 std::cout << "reprojection 3D to 2D initialize stage " << endl;
@@ -491,41 +503,41 @@ std::cout << " Inlier ratio : " << SolvePnP_inlier_ratio << " %" << endl;
 
             
             // Motion only BA
-//             std::vector<cv::Point3d> map_point_for_motion_BA;
-//             std::vector<cv::Point2f> current_image_pts_for_motion_BA;
+            std::vector<cv::Point3d> map_point_for_motion_BA;
+            std::vector<cv::Point2f> current_image_pts_for_motion_BA;
   
-//             // for(int i = 0; i < map_point.size(); i++) map_point_for_motion_BA.push_back(map_point[i]);
-//             // for(int i = 0; i < current_image.pts.size(); i++) current_image_pts_for_motion_BA.push_back(current_image.pts[i]);
-//             for(int i = 0; i < inliers.rows; i++)
-//             {
-//                 map_point_for_motion_BA.push_back(map_point[inliers.at<int>(i, 0)]);
-//                 current_image_pts_for_motion_BA.push_back(current_image.pts[inliers.at<int>(i, 0)]);
+            // for(int i = 0; i < map_point.size(); i++) map_point_for_motion_BA.push_back(map_point[i]);
+            // for(int i = 0; i < current_image.pts.size(); i++) current_image_pts_for_motion_BA.push_back(current_image.pts[i]);
+            for(int i = 0; i < inliers.rows; i++)
+            {
+                map_point_for_motion_BA.push_back(map_point[inliers.at<int>(i, 0)]);
+                current_image_pts_for_motion_BA.push_back(current_image.pts[inliers.at<int>(i, 0)]);
                 
-//             }
-// std::cout << " map point size for motion only BA : " << map_point_for_motion_BA.size() << endl;
+            }
+std::cout << " map point size for motion only BA : " << map_point_for_motion_BA.size() << endl;
 
-//             ceres::Problem motion_only_ba;
+            ceres::Problem motion_only_ba;
             
-//             for ( int i = 0; i < current_image_pts_for_motion_BA.size(); i++)
-//             {
-//                 ceres::CostFunction* motion_only_cost_func = motion_only_ReprojectionError::create(current_image_pts_for_motion_BA[i], map_point_for_motion_BA[i], f, cv::Point2d(c.x, c.y));
-//                 double* camera_ = (double*)(&current_image.cam_pose);
+            for ( int i = 0; i < current_image_pts_for_motion_BA.size(); i++)
+            {
+                ceres::CostFunction* motion_only_cost_func = motion_only_ReprojectionError::create(current_image_pts_for_motion_BA[i], map_point_for_motion_BA[i], f, cv::Point2d(c.x, c.y));
+                double* camera_ = (double*)(&current_image.cam_pose);
         
-//                 motion_only_ba.AddResidualBlock(motion_only_cost_func, NULL, camera_); 
-//             }            
+                motion_only_ba.AddResidualBlock(motion_only_cost_func, NULL, camera_); 
+            }            
             
-//             // ceres option       
-//             ceres::Solver::Options options;
-//             options.linear_solver_type = ceres::ITERATIVE_SCHUR;
-//             options.num_threads = 12;
-//             options.minimizer_progress_to_stdout = false;
-//             ceres::Solver::Summary summary;
+            // ceres option       
+            ceres::Solver::Options options;
+            options.linear_solver_type = ceres::ITERATIVE_SCHUR;
+            options.num_threads = 8;
+            options.minimizer_progress_to_stdout = false;
+            ceres::Solver::Summary summary;
                             
-//             // solve
-//             ceres::Solve(options, &motion_only_ba, &summary);
+            // solve
+            ceres::Solve(options, &motion_only_ba, &summary);
 
-//             std::cout <<" ( after motion only BA )current camera pose  : " << endl;
-//             std::cout << vec6d_to_homogenous_campose(current_image.cam_pose) << endl;
+            std::cout <<" ( after motion only BA )current camera pose  : " << endl;
+            std::cout << vec6d_to_homogenous_campose(current_image.cam_pose) << endl;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////   Determine Keyframe or not    ////////////////////////////////////////////////////////////////////////////////////
@@ -563,6 +575,7 @@ std::cout << " Rotation difference : " << rotation_difference << endl;
             
             if (new_keyframe_selection)
             {
+                glClear(GL_COLOR_BUFFER_BIT);
 
 
                 // Determinate doing triangulation or not 
@@ -681,76 +694,76 @@ std::cout << "@@@@@@@@@ New keyframe was made @@@@@@@@@" << endl << " Keyframe n
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-//                 ceres::Problem keyframe_ba;
+                ceres::Problem keyframe_ba;
                 int p1 = 0;
                 if(keyframe_num - active_keyframe_num + 1 < 0) p1 = keyframe_num - active_keyframe_num + 1;
                 else p1 = 0;
                 
-//                 for(int j = keyframe_num - active_keyframe_num + 1 - p1; j < keyframe_num + 1; j++)
-//                 {
-// std::cout << " active keyframe num  : " << j << endl;                        
-//                     for ( int i = 0; i < inlier_storage[j].rows; i++)
-//                     {
-//                         ceres::CostFunction* keyframe_cost_func = ReprojectionError::create(map_storage.keyframe[j].pts[inlier_storage[j].at<int>(i, 0)], f, cv::Point2d(c.x, c.y));
+                for(int j = keyframe_num - active_keyframe_num + 1 - p1; j < keyframe_num + 1; j++)
+                {
+std::cout << " active keyframe num  : " << j << endl;                        
+                    for ( int i = 0; i < inlier_storage[j].rows; i++)
+                    {
+                        ceres::CostFunction* keyframe_cost_func = ReprojectionError::create(map_storage.keyframe[j].pts[inlier_storage[j].at<int>(i, 0)], f, cv::Point2d(c.x, c.y));
 
-//                         double* camera = (double*)(&map_storage.keyframe[j].cam_pose);
-//                         int id_ = map_storage.keyframe[j].pts_id[inlier_storage[j].at<int>(i, 0)];
-//                         double* X_ = (double*)(&(map_storage.world_xyz[id_]));
-//                         keyframe_ba.AddResidualBlock(keyframe_cost_func, NULL, camera, X_); 
+                        double* camera = (double*)(&map_storage.keyframe[j].cam_pose);
+                        int id_ = map_storage.keyframe[j].pts_id[inlier_storage[j].at<int>(i, 0)];
+                        double* X_ = (double*)(&(map_storage.world_xyz[id_]));
+                        keyframe_ba.AddResidualBlock(keyframe_cost_func, NULL, camera, X_); 
 
-//                     }            
-//                 }
+                    }            
+                }
 
                 int p2 = 0;
                 if(keyframe_num - active_keyframe_num + 1 - fix_keyframe_num < 0) p2 = keyframe_num - active_keyframe_num + 1 - fix_keyframe_num;
                 else p2 = 0;
 
-//                 for(int j = keyframe_num - active_keyframe_num + 1 - fix_keyframe_num - p2; j < keyframe_num - active_keyframe_num + 1; j++)
-//                 {
-// std::cout << " fixed keyframe num  : " << j << endl;                         
-//                     for ( int i = 0; i < inlier_storage[j].rows; i++)
-//                     {
-//                         ceres::CostFunction* fix_keyframe_cost_func = map_point_only_ReprojectionError::create(map_storage.keyframe[j].pts[inlier_storage[j].at<int>(i, 0)], map_storage.keyframe[j].cam_pose, f, cv::Point2d(c.x, c.y));
-//                         int id_ = map_storage.keyframe[j].pts_id[inlier_storage[j].at<int>(i, 0)];
-//                         double* X_ = (double*)(&(map_storage.world_xyz[id_]));
-//                         keyframe_ba.AddResidualBlock(fix_keyframe_cost_func, NULL, X_); 
+                for(int j = keyframe_num - active_keyframe_num + 1 - fix_keyframe_num - p2; j < keyframe_num - active_keyframe_num + 1; j++)
+                {
+std::cout << " fixed keyframe num  : " << j << endl;                         
+                    for ( int i = 0; i < inlier_storage[j].rows; i++)
+                    {
+                        ceres::CostFunction* fix_keyframe_cost_func = map_point_only_ReprojectionError::create(map_storage.keyframe[j].pts[inlier_storage[j].at<int>(i, 0)], map_storage.keyframe[j].cam_pose, f, cv::Point2d(c.x, c.y));
+                        int id_ = map_storage.keyframe[j].pts_id[inlier_storage[j].at<int>(i, 0)];
+                        double* X_ = (double*)(&(map_storage.world_xyz[id_]));
+                        keyframe_ba.AddResidualBlock(fix_keyframe_cost_func, NULL, X_); 
                                 
-//                     }            
-//                 }                    
+                    }            
+                }                    
                                 
                                 
-//                 // ceres option       
-//                 ceres::Solver::Options options;
-//                 options.linear_solver_type = ceres::ITERATIVE_SCHUR;
-//                 options.num_threads = 12;
-//                 options.minimizer_progress_to_stdout = false;
-//                 ceres::Solver::Summary summary;
+                // ceres option       
+                ceres::Solver::Options options;
+                options.linear_solver_type = ceres::ITERATIVE_SCHUR;
+                options.num_threads = 8;
+                options.minimizer_progress_to_stdout = false;
+                ceres::Solver::Summary summary;
 
-//                 // Camera pose and map_point before BA
-//                 std::cout <<" camera pose before keyframe BA " << endl;
-//                 for(int j = keyframe_num - active_keyframe_num + 1 - p1; j < keyframe_num + 1; j++) std::cout << " keyframe num : " << j << endl << vec6d_to_homogenous_campose(map_storage.keyframe[j].cam_pose) << endl;
+                // Camera pose and map_point before BA
+                std::cout <<" camera pose before keyframe BA " << endl;
+                for(int j = keyframe_num - active_keyframe_num + 1 - p1; j < keyframe_num + 1; j++) std::cout << " keyframe num : " << j << endl << vec6d_to_homogenous_campose(map_storage.keyframe[j].cam_pose) << endl;
                     
-//                 // solve
-//                 ceres::Solve(options, &keyframe_ba, &summary);                
+                // solve
+                ceres::Solve(options, &keyframe_ba, &summary);                
                     
-//                 // Camera pose and map_point after BA
-//                 std::cout << endl << " camera pose after keyframe BA " << endl;
-//                 for(int j = keyframe_num - active_keyframe_num + 1 - p1; j < keyframe_num + 1; j++) std::cout << " keyframe num : " << j << endl << vec6d_to_homogenous_campose(map_storage.keyframe[j].cam_pose) << endl;                
+                // Camera pose and map_point after BA
+                std::cout << endl << " camera pose after keyframe BA " << endl;
+                for(int j = keyframe_num - active_keyframe_num + 1 - p1; j < keyframe_num + 1; j++) std::cout << " keyframe num : " << j << endl << vec6d_to_homogenous_campose(map_storage.keyframe[j].cam_pose) << endl;                
 
                 // visualize map point ( black dot )
-                if(keyframe_num % 3 == 0)
-                {
-                    if ((keyframe_num - active_keyframe_num + 1 - fix_keyframe_num) >= 0)
-                    {
-                        int k = keyframe_num - active_keyframe_num + 1 - fix_keyframe_num - p2;
-                        for ( int i = 0; i < inlier_storage[k].rows; i++)
-                        {
-                            int id_ = map_storage.keyframe[k].pts_id[inlier_storage[k].at<int>(i, 0)];
-                            GLdouble X_map(map_storage.world_xyz[id_].x), Y_map(map_storage.world_xyz[id_].y), Z_map(map_storage.world_xyz[id_].z);
-                            show_trajectory(X_map, Y_map, Z_map, 0.0, 0.0, 0.0, 0.01);              
-                        }
-                    }
-                }
+                // if(keyframe_num % 3 == 0)
+                // {
+                //     if ((keyframe_num - active_keyframe_num + 1 - fix_keyframe_num) >= 0)
+                //     {
+                //         int k = keyframe_num - active_keyframe_num + 1 - fix_keyframe_num - p2;
+                //         for ( int i = 0; i < inlier_storage[k].rows; i++)
+                //         {
+                //             int id_ = map_storage.keyframe[k].pts_id[inlier_storage[k].at<int>(i, 0)];
+                //             GLdouble X_map(map_storage.world_xyz[id_].x), Y_map(map_storage.world_xyz[id_].y), Z_map(map_storage.world_xyz[id_].z);
+                //             show_trajectory(X_map, Y_map, Z_map, 0.0, 0.0, 0.0, 0.01);              
+                //         }
+                //     }
+                // }
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -896,19 +909,23 @@ std::cout << " same point :  " << same_point_num << " different point num  : " <
 
         
         // Show gt trajectory (red line)
-        GLfloat inputbuffer[12];
-        for(int j=0;j<12;j++) GT_DATA >> inputbuffer[j];
-        GLfloat x_gt(inputbuffer[3]), y_gt(inputbuffer[7]), z_gt(inputbuffer[11]);
-        show_trajectory(x_gt, y_gt, z_gt, 1.0, 0.0, 0.0, 3.0);
+        GLfloat GT_Pose[12];
+        for(int j=0;j<12;j++) GT_DATA >> GT_Pose[j];
+
         // show_trajectory_right_mini(x_gt, y_gt, z_gt, 1.0, 0.0, 0.0, 3.0);
         // show_trajectory_left_mini(x_gt, y_gt, z_gt, 1.0, 0.0, 0.0, 3.0);
 
 
         // show gt 
         cv::Mat_<double> gt_pose(3, 4);
-        gt_pose << inputbuffer[0], inputbuffer[1], inputbuffer[2], inputbuffer[3], inputbuffer[4], inputbuffer[5], inputbuffer[6], inputbuffer[7], inputbuffer[8], inputbuffer[9], inputbuffer[10], inputbuffer[11];
-        std::cout << " GT pose  : "  << endl << gt_pose << endl;        
-
+        gt_pose << GT_Pose[0], GT_Pose[1], GT_Pose[2], GT_Pose[3], GT_Pose[4], GT_Pose[5], GT_Pose[6], GT_Pose[7], GT_Pose[8], GT_Pose[9], GT_Pose[10], GT_Pose[11];
+        std::cout << " current GT pose  : "  << endl << gt_pose << endl;        
+        GT_Storage.push_back(gt_pose);
+        for(int i = 0 ; i < GT_Storage.size(); i++)
+        {
+            GLfloat x_gt(GT_Storage[i].at<double>(0, 3)), y_gt(GT_Storage[i].at<double>(1, 3)), z_gt(GT_Storage[i].at<double>(2, 3));
+            show_trajectory(x_gt, y_gt, z_gt, 1.0, 0.0, 0.0, 3.0);
+        }
         // Show camera estimate pose trajectory_motion_only_ba ( green line )
         cv::Mat campose_vec6d_to_mat_for_visualize = vec6d_to_homogenous_campose(current_image.cam_pose);
         GLdouble _x_cam_pose(campose_vec6d_to_mat_for_visualize.at<double>(0, 3)), _y_cam_pose(campose_vec6d_to_mat_for_visualize.at<double>(1, 3)), _z_cam_pose(campose_vec6d_to_mat_for_visualize.at<double>(2, 3));         
@@ -921,11 +938,28 @@ std::cout << " same point :  " << same_point_num << " different point num  : " <
         if (new_keyframe_selection)
         { 
                
-                cv::Mat campose_vec6d_to_mat_for_visualize = vec6d_to_homogenous_campose(map_storage.keyframe[keyframe_num - active_keyframe_num].cam_pose);
-                GLdouble _x_cam_pose(campose_vec6d_to_mat_for_visualize.at<double>(0, 3)), _y_cam_pose(campose_vec6d_to_mat_for_visualize.at<double>(1, 3)), _z_cam_pose(campose_vec6d_to_mat_for_visualize.at<double>(2, 3));         
-                // show_trajectory_left_mini(_x_cam_pose, _y_cam_pose, _z_cam_pose, 0.0, 0.0, 1.0, 3.0);
-                cv::Mat rb_t = homogenous_campose_for_keyframe_visualize(campose_vec6d_to_mat_for_visualize, 5.0); // size
-                show_trajectory_keyframe(rb_t, 0.0, 0.0, 1.0, 1.0);
+                // cv::Mat campose_vec6d_to_mat_for_visualize = vec6d_to_homogenous_campose(map_storage.keyframe[keyframe_num - active_keyframe_num].cam_pose);
+                // draw_campose.push_back(campose_vec6d_to_mat_for_visualize);
+                // for(int i = 0; i < draw_campose.size(); i++)
+                // {
+                //     GLdouble _x_cam_pose(draw_campose[i].at<double>(0, 3)), _y_cam_pose(draw_campose[i].at<double>(1, 3)), _z_cam_pose(draw_campose[i].at<double>(2, 3));         
+                //     // show_trajectory_left_mini(_x_cam_pose, _y_cam_pose, _z_cam_pose, 0.0, 0.0, 1.0, 3.0);
+                //     cv::Mat rb_t = homogenous_campose_for_keyframe_visualize(draw_campose[i], 5.0); // size
+                //     show_trajectory_keyframe(rb_t, 0.0, 0.0, 1.0, 1.0);
+                // }
+
+                cv::Mat campose_vec6d_to_mat_for_visualize = vec6d_to_homogenous_campose(map_storage.keyframe[keyframe_num].cam_pose);
+                draw_campose.push_back(campose_vec6d_to_mat_for_visualize);
+                cv::Mat rb_t_ = homogenous_campose_for_keyframe_visualize(campose_vec6d_to_mat_for_visualize, 8.0); // size
+                show_trajectory_keyframe(rb_t_, 0.0, 1.0, 0.0, 1.0);
+                for(int i = 0; i < draw_campose.size()-1; i++)
+                {
+                    GLdouble _x_cam_pose(draw_campose[i].at<double>(0, 3)), _y_cam_pose(draw_campose[i].at<double>(1, 3)), _z_cam_pose(draw_campose[i].at<double>(2, 3));         
+                    // show_trajectory_left_mini(_x_cam_pose, _y_cam_pose, _z_cam_pose, 0.0, 0.0, 1.0, 3.0);
+                    cv::Mat rb_t = homogenous_campose_for_keyframe_visualize(draw_campose[i], 8.0); // size
+                    show_trajectory_keyframe(rb_t, 0.0, 0.0, 1.0, 1.0);
+                }
+
                 if(fix_keyframe_parms - fix_keyframe_num == fix_keyframe_num) fix_keyframe_parms++;
         }
     
@@ -987,6 +1021,7 @@ std::cout << " map_storage size is : " << map_storage.world_xyz.size() << endl;
 
         glFlush();
 
+        // glClearColor(1.0,1.0,1.0, 1.0);
         
 
         previous_image = current_image;

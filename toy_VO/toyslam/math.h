@@ -1,6 +1,7 @@
 #pragma once
 #include "opencv2/opencv.hpp"
 #include "opencv2/sfm/projection.hpp"
+#include "Eigen/Dense"
 
 void print_map(std::map<int, cv::Point3d>& m);
 
@@ -54,3 +55,4 @@ void remove_SolvePnP_oulier (std::vector<cv::Point3d> &map_point_, std::vector<c
 void remove_SolvePnP_oulier_ (std::vector<cv::Point3d> &map_point_, std::vector<cv::Point2f> &current_pts_, std::vector<int> &previous_track_point_for_triangulate_ID_, cv::Mat inliers_index);
 
 void changeStructure(const cv::Mat &plain, std::vector<cv::Mat> &out);
+
