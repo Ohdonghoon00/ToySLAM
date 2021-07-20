@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.5.0)
 project(toyslam)
 set(CMAKE_BUILD_TYPE Release)
 find_package(OpenCV REQUIRED)
+find_package(Eigen)
 
 
 
@@ -9,7 +10,7 @@ find_package(OpenCV REQUIRED)
 
 include_directories(
   
-  
+  "/usr/include/eigen3"
   ${OpenCV_INCLUDE_DIRS}
 )
 

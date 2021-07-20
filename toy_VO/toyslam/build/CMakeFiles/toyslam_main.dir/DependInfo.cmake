@@ -17,9 +17,9 @@ set(CMAKE_TARGET_DEFINITIONS_CXX
 
 # The include file search paths:
 set(CMAKE_CXX_TARGET_INCLUDE_PATH
+  "/usr/include/eigen3"
   "/usr/local/include/opencv4"
   "/usr/local/include"
-  "/usr/include/eigen3"
   "../graph_optimization/DBoW2/include/DBoW2"
   "../graph_optimization/DBoW2/include"
   )

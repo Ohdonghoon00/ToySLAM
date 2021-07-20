@@ -6,5 +6,5 @@ CXX_FLAGS = -O3 -DNDEBUG
 
 CXX_DEFINES = 
 
-CXX_INCLUDES = -I/usr/local/include/opencv4 
+CXX_INCLUDES = -I/usr/include/eigen3 -I/usr/local/include/opencv4 
 
