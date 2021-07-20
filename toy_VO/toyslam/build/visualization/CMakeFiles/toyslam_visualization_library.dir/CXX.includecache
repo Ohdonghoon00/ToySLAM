@@ -13,6 +13,8 @@ opencv2/sfm/projection.hpp
 /home/donghoon/ToySLAM/toy_VO/toyslam/opencv2/sfm/projection.hpp
 Eigen/Dense
 /home/donghoon/ToySLAM/toy_VO/toyslam/Eigen/Dense
+types/Map.h
+/home/donghoon/ToySLAM/toy_VO/toyslam/types/Map.h
 
 /home/donghoon/ToySLAM/toy_VO/toyslam/types/Frame.h
 vector

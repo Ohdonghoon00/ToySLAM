@@ -3,6 +3,8 @@
 
 CMakeFiles/toyslam_main.dir/math.cpp.o: ../math.cpp
 CMakeFiles/toyslam_main.dir/math.cpp.o: ../math.h
+CMakeFiles/toyslam_main.dir/math.cpp.o: ../types/Frame.h
+CMakeFiles/toyslam_main.dir/math.cpp.o: ../types/Map.h
 CMakeFiles/toyslam_main.dir/math.cpp.o: /usr/include/eigen3/Eigen/Cholesky
 CMakeFiles/toyslam_main.dir/math.cpp.o: /usr/include/eigen3/Eigen/Core
 CMakeFiles/toyslam_main.dir/math.cpp.o: /usr/include/eigen3/Eigen/Dense

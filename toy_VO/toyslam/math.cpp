@@ -392,3 +392,9 @@ void changeStructure(const cv::Mat &plain, std::vector<cv::Mat> &out)
     // std::cout << out[i].size() << std::endl;
   }
 }
+
+// Eigen::Vector3d PoseToEigen3d(Map &conversion_pose, int num)
+// {
+//     Eigen::Vector3d abc(conversion_pose.keyframe[num].cam_pose[0], conversion_pose.keyframe[num].cam_pose[1], conversion_pose.keyframe[num].cam_pose[2]);
+//     return abc;
+// }

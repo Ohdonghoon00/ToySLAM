@@ -4,6 +4,8 @@
 CMakeFiles/toyslam_main.dir/math.cpp.o
  /home/donghoon/ToySLAM/toy_VO/toyslam/math.cpp
  /home/donghoon/ToySLAM/toy_VO/toyslam/math.h
+ /home/donghoon/ToySLAM/toy_VO/toyslam/types/Frame.h
+ /home/donghoon/ToySLAM/toy_VO/toyslam/types/Map.h
  /usr/include/eigen3/Eigen/Cholesky
  /usr/include/eigen3/Eigen/Core
  /usr/include/eigen3/Eigen/Dense

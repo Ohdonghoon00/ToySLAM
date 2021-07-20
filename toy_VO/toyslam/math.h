@@ -2,6 +2,7 @@
 #include "opencv2/opencv.hpp"
 #include "opencv2/sfm/projection.hpp"
 #include "Eigen/Dense"
+#include "types/Map.h"
 
 void print_map(std::map<int, cv::Point3d>& m);
 
@@ -56,3 +57,11 @@ void remove_SolvePnP_oulier_ (std::vector<cv::Point3d> &map_point_, std::vector<
 
 void changeStructure(const cv::Mat &plain, std::vector<cv::Mat> &out);
 
+// Eigen::Vector3d PoseToEigen3d(Map &conversion_pose, int num);
+
+
+// Eigen::Quaterniond RotationToQuan(Map &conversion_rot)
+// {
+//     Eigen::Quaterniond abc;
+
+// }
