@@ -40,3 +40,33 @@ void addEdgePosePose(g2o::SparseOptimizer* optimizer, int id0, int id1, g2o::SE3
     edge->setInformation(info_matrix);
     optimizer->addEdge(edge);
 }
+
+void ToVertexSim3(const g2o::VertexSE3 &v_se3,
+                  g2o::VertexSim3Expmap *const v_sim3)
+{
+  Eigen::Isometry3d se3 = v_se3.estimate().inverse();
+  Eigen::Matrix3d r = se3.rotation();
+  Eigen::Vector3d t = se3.translation();
+
+  // cout<<"Convert vertices to Sim3: "<<"\n";
+  // cout<<"r: "<<se3.rotation()<<"\n";
+  // cout<<"t: "<<se3.translation()<<"\n";
+  g2o::Sim3 sim3(r, t, 1.0);
+
+  v_sim3->setEstimate(sim3);
+}
+
+// Converte EdgeSE3 to EdgeSim3
+void ToEdgeSim3(const g2o::EdgeSE3 &e_se3, g2o::EdgeSim3 *const e_sim3)
+{
+  Eigen::Isometry3d se3 = e_se3.measurement().inverse();
+  Eigen::Matrix3d r = se3.rotation();
+  Eigen::Vector3d t = se3.translation();
+
+  // cout<<"Convert edges to Sim3:"<<"\n";
+  // cout<<"r: "<<se3.rotation()<<"\n";
+  // cout<<"t: "<<se3.translation()<<"\n";
+  g2o::Sim3 sim3(r, t, 1.0);
+
+  e_sim3->setMeasurement(sim3);
+}

@@ -24,6 +24,7 @@
 using namespace std;
 using namespace cv;
 using namespace DBoW2;
+using namespace g2o;
 using ceres::CauchyLoss;
 using ceres::HuberLoss;
 
@@ -132,6 +133,8 @@ int main(int argc, char **argv)
     std::vector<cv::Mat> draw_campose;
     Map map_storage;
 
+    // posegraph
+    std::vector<g2o::SE3Quat> vec_pose;
 
     // DBoW2
     // OrbVocabulary voc("small_voc.yml.gz");
@@ -160,6 +163,27 @@ int main(int argc, char **argv)
     Frame copy_previous_image = previous_image;
     frame_storage.push_back(copy_previous_image); 
         
+    // pose graph
+
+    // create linear solver
+    std::unique_ptr<g2o::BlockSolver_7_3::LinearSolverType> linear_solver = 
+    g2o::make_unique<g2o::LinearSolverDense<g2o::BlockSolver_7_3::PoseMatrixType>>();
+               
+                    
+    // create block solver                            
+    std::unique_ptr<g2o::BlockSolver_7_3> block_solver =
+    g2o::make_unique<g2o::BlockSolver_7_3>(std::move(linear_solver));
+
+    g2o::OptimizationAlgorithm* algorithm
+    = new g2o::OptimizationAlgorithmLevenberg(std::move(block_solver));
+
+    g2o::SparseOptimizer* optimizer = new SparseOptimizer;
+    optimizer->setAlgorithm(algorithm);
+    optimizer->setVerbose(true); 
+
+    g2o::SparseOptimizer optimizer_sim3;
+    optimizer_sim3.setAlgorithm(algorithm);
+    optimizer_sim3.setVerbose(true);   
     
     while(true)
     {
@@ -292,25 +316,10 @@ std::cout << " map_point size after remove solvepnp outlier : " <<  map_point.si
                 db.add(features[0]);
 
                 
-                // pose graph
 
-                // create linear solver
-                std::unique_ptr<g2o::BlockSolver_7_3::LinearSolverType> linear_solver = 
-                g2o::make_unique<g2o::LinearSolverDense<g2o::BlockSolver_7_3::PoseMatrixType>>();
-               
-                    
-                // create block solver                            
-                std::unique_ptr<g2o::BlockSolver_7_3> block_solver =
-                g2o::make_unique<g2o::BlockSolver_7_3>(std::move(linear_solver));
 
-                g2o::OptimizationAlgorithm* algorithm
-                = new g2o::OptimizationAlgorithmLevenberg(std::move(block_solver));
+                
 
-                g2o::SparseOptimizer* optimizer = new g2o::SparseOptimizer;
-                optimizer->setAlgorithm(algorithm);
-                optimizer->setVerbose(true);
-
-                    
                 
 
                 
@@ -421,6 +430,20 @@ std::cout << " same point :  " << same_point_num << " different point num  : " <
 
                 std::cout << " camera cam pose after intialize ba " << endl <<vec6d_to_homogenous_campose(map_storage.keyframe[0].cam_pose) << endl;
             
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+                // add vertex to posegraph
+                Eigen::Vector3d PoseGraphTranslation;
+                PoseGraphTranslation = PoseToEigen3d(map_storage, keyframe_num);
+                
+                // rotation matrix to quternion
+                Eigen::Matrix3d abcd = RotationMatToEigen3d(vec6d_to_homogenous_campose(map_storage.keyframe[keyframe_num].cam_pose));
+                Eigen::Quaterniond PoseGraphQuternion;
+                PoseGraphQuternion = getQuaternionFromRotationMatrix(abcd);
+                g2o::SE3Quat PG_Pose(PoseGraphQuternion, PoseGraphTranslation);
+                vec_pose.push_back(PG_Pose);
+                addPoseVertex(optimizer, PG_Pose, true);
+
                 // Reprojection 3D to 2D current image
                 std::cout << "reprojection 3D to 2D initialize stage " << endl;
                 cv::Mat R_, t_;
@@ -430,7 +453,9 @@ std::cout << " same point :  " << same_point_num << " different point num  : " <
                 cv::Mat project_mat = Mat(map_point).clone();
                 project_mat.convertTo(project_mat, CV_32F);
                 cv::projectPoints(project_mat, R_, t_, K, cv::noArray(), projectionpoints);                
-            
+
+
+
             }
         
         
@@ -660,7 +685,8 @@ std::cout << map_point.size() << "      " << current_track_point_for_triangulate
                 inlier_storage.push_back(inliers_);
 std::cout << keyframe_num + 1 << " keyframe inlier storage rate : " << 100 * inliers_.rows / map_point.size() << endl;                
 
-                
+
+
                 // Storage pts
                 current_image.pts.clear();
                 current_image.pts_id.clear();
@@ -765,6 +791,31 @@ std::cout << " fixed keyframe num  : " << j << endl;
                 //     }
                 // }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+                // add vertex to posegraph
+                Eigen::Vector3d PoseGraphTranslation;
+                PoseGraphTranslation = PoseToEigen3d(map_storage, keyframe_num);
+                
+                
+                // rotation matrix to quternion
+                Eigen::Matrix3d abcd = RotationMatToEigen3d(vec6d_to_homogenous_campose(map_storage.keyframe[keyframe_num].cam_pose));
+                Eigen::Quaterniond PoseGraphQuternion;
+                PoseGraphQuternion = getQuaternionFromRotationMatrix(abcd);
+                
+                g2o::SE3Quat PG_Pose(PoseGraphQuternion, PoseGraphTranslation);
+                // std::cout << "PG_Pose" << std::endl << PG_Pose << std::endl;
+                // cv::waitKey();
+                vec_pose.push_back(PG_Pose);
+
+                addPoseVertex(optimizer, PG_Pose, true);
+                
+                // add edge to posegraph
+                g2o::SE3Quat relpose;
+                relpose = vec_pose[keyframe_num-1].inverse() * vec_pose[keyframe_num];
+                addEdgePosePose(optimizer, keyframe_num-1, keyframe_num, relpose);
+                
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////                
@@ -812,8 +863,80 @@ cout << "erase nearest keyframe "  << ". " << ret[0] << endl;
                     {
                         loop_detect_frame_id = ret[0].Id;
                         show_loop_detect_line(map_storage, loop_detect_frame_id, keyframe_num, 0.0f, 1.0f, 0.0f, 1.3);
-                        // cv::waitKey();
-                        loop_detect = false;
+
+                        // find relative R,t between loop_detect_frame and current_frame
+                        std::vector<cv::Point2f> track_point_for_add_PG_edge;
+                        track_opticalflow_and_remove_err(map_storage.keyframe[loop_detect_frame_id].frame, current_image.frame, map_storage.keyframe[loop_detect_frame_id].pts, track_point_for_add_PG_edge);
+                        cv::Mat E, inlier_mask, R, t, Rt;
+                        E = cv::findEssentialMat(map_storage.keyframe[loop_detect_frame_id].pts, track_point_for_add_PG_edge, f, c, cv::RANSAC, 0.99, 1, inlier_mask);
+                        int inlier_num = cv::recoverPose(E, map_storage.keyframe[loop_detect_frame_id].pts, track_point_for_add_PG_edge, R, t, f, c, inlier_mask);
+                        
+                        
+                        Eigen::Vector3d loop_PoseGraphTranslation(t.at<double>(0, 0), t.at<double>(1, 0), t.at<double>(2, 0));
+                        std::cout << R << std::endl << t << std::endl;
+                        // rotation matrix to quternion
+                        Eigen::Matrix3d loop_abcd = RotationMatToEigen3d(R);
+                        Eigen::Quaterniond loop_PoseGraphQuternion;
+                        loop_PoseGraphQuternion = getQuaternionFromRotationMatrix(loop_abcd);
+                        
+                        g2o::SE3Quat loop_relpose(loop_PoseGraphQuternion, loop_PoseGraphTranslation);
+                        std::cout << loop_relpose <<std::endl;     
+                        addEdgePosePose(optimizer, loop_detect_frame_id, keyframe_num, loop_relpose);
+                        
+                        // for(int i = 0; i < vec_pose.size(); i++)
+                        // {
+                        //     g2o::VertexSE3* v_se3 = static_cast<g2o::VertexSE3*>(optimizer->vertex(i));
+                        //     g2o::VertexSim3Expmap* v_sim3 = new g2o::VertexSim3Expmap::VertexSim3Expmap();
+                        //     ToVertexSim3(*v_se3, v_sim3);
+                        //     optimizer_sim3.addVertex(v_sim3);
+                        // }
+         
+                        optimizer->initializeOptimization();
+                        optimizer->optimize(100);
+                        
+                        std::cout << "vec_pose.size()" << vec_pose.size() << std::endl;
+                        for(int i = 0; i < vec_pose.size(); i++)
+                        {
+                            g2o::VertexSE3* vtx = static_cast<g2o::VertexSE3*>(optimizer->vertex(i));
+                            g2o::Isometry3 se3 = vtx->estimate();
+                            // std::cout << "se3" << se3 << std::endl;
+                            Eigen::Matrix3d r_ = se3.rotation();
+                            Eigen::Vector3d t_ = se3.translation();
+                            cv::Mat rot = Eigen3dToRotationMat(r_);
+                            cv::Rodrigues(rot, rot);
+                            map_storage.keyframe[i].cam_pose[0] = rot.at<double>(0, 0);
+                            map_storage.keyframe[i].cam_pose[1] = rot.at<double>(1, 0);
+                            map_storage.keyframe[i].cam_pose[2] = rot.at<double>(2, 0);
+                            map_storage.keyframe[i].cam_pose[3] = t_[0];
+                            map_storage.keyframe[i].cam_pose[4] = t_[1];
+                            map_storage.keyframe[i].cam_pose[5] = t_[2];
+                            // std::cout << "rot" << std::endl << rot << std::endl;
+                            // std::cout << "t_" << std::endl << t_ << std::endl;
+                        }
+                        
+                        // std::cout << "vec_pose.size()" << vec_pose.size() << std::endl;
+                        // for(int i = 0; i < vec_pose.size(); i++)
+                        // {
+                        //     g2o::VertexSim3Expmap* vtx = static_cast<g2o::VertexSim3Expmap*>(optimizer->vertex(i));
+                        //     g2o::Sim3 sim3 = vtx->estimate();
+                        //     // std::cout << "se3" << se3 << std::endl;
+                        //     Eigen::Matrix3d r_ = sim3.rotation().toRotationMatrix();
+                        //     Eigen::Vector3d t_ = sim3.translation();
+                        //     cv::Mat rot = Eigen3dToRotationMat(r_);
+                        //     cv::Rodrigues(rot, rot);
+                        //     map_storage.keyframe[i].cam_pose[0] = rot.at<double>(0, 0);
+                        //     map_storage.keyframe[i].cam_pose[1] = rot.at<double>(1, 0);
+                        //     map_storage.keyframe[i].cam_pose[2] = rot.at<double>(2, 0);
+                        //     map_storage.keyframe[i].cam_pose[3] = t_[0];
+                        //     map_storage.keyframe[i].cam_pose[4] = t_[1];
+                        //     map_storage.keyframe[i].cam_pose[5] = t_[2];
+                        //     std::cout << "rot" << std::endl << rot << std::endl;
+                        //     std::cout << "t_" << std::endl << t_ << std::endl;
+                        // }                        
+
+                            
+                            cv::waitKey();
+                        // loop_detect = false;
                     }    
                 }
                 db.add(features[0]);
@@ -948,18 +1071,27 @@ std::cout << " same point :  " << same_point_num << " different point num  : " <
                 //     show_trajectory_keyframe(rb_t, 0.0, 0.0, 1.0, 1.0);
                 // }
 
-                cv::Mat campose_vec6d_to_mat_for_visualize = vec6d_to_homogenous_campose(map_storage.keyframe[keyframe_num].cam_pose);
-                draw_campose.push_back(campose_vec6d_to_mat_for_visualize);
-                cv::Mat rb_t_ = homogenous_campose_for_keyframe_visualize(campose_vec6d_to_mat_for_visualize, 8.0); // size
-                show_trajectory_keyframe(rb_t_, 0.0, 1.0, 0.0, 1.0);
-                for(int i = 0; i < draw_campose.size()-1; i++)
-                {
-                    GLdouble _x_cam_pose(draw_campose[i].at<double>(0, 3)), _y_cam_pose(draw_campose[i].at<double>(1, 3)), _z_cam_pose(draw_campose[i].at<double>(2, 3));         
-                    // show_trajectory_left_mini(_x_cam_pose, _y_cam_pose, _z_cam_pose, 0.0, 0.0, 1.0, 3.0);
-                    cv::Mat rb_t = homogenous_campose_for_keyframe_visualize(draw_campose[i], 8.0); // size
-                    show_trajectory_keyframe(rb_t, 0.0, 0.0, 1.0, 1.0);
-                }
+                // cv::Mat campose_vec6d_to_mat_for_visualize = vec6d_to_homogenous_campose(map_storage.keyframe[keyframe_num].cam_pose);
+                // draw_campose.push_back(campose_vec6d_to_mat_for_visualize);
+                // cv::Mat rb_t_ = homogenous_campose_for_keyframe_visualize(campose_vec6d_to_mat_for_visualize, 8.0); // size
+                // show_trajectory_keyframe(rb_t_, 0.0, 1.0, 0.0, 1.0);
+                // for(int i = 0; i < draw_campose.size()-1; i++)
+                // {
+                //     GLdouble _x_cam_pose(draw_campose[i].at<double>(0, 3)), _y_cam_pose(draw_campose[i].at<double>(1, 3)), _z_cam_pose(draw_campose[i].at<double>(2, 3));         
+                //     // show_trajectory_left_mini(_x_cam_pose, _y_cam_pose, _z_cam_pose, 0.0, 0.0, 1.0, 3.0);
+                //     cv::Mat rb_t = homogenous_campose_for_keyframe_visualize(draw_campose[i], 8.0); // size
+                //     show_trajectory_keyframe(rb_t, 0.0, 0.0, 1.0, 1.0);
+                // }
 
+                for(int i = 0; i < keyframe_num; i++)
+                {
+                    cv::Mat campose_vec6d_to_mat_for_visualize = vec6d_to_homogenous_campose(map_storage.keyframe[i].cam_pose);
+                    cv::Mat rb_t_ = homogenous_campose_for_keyframe_visualize(campose_vec6d_to_mat_for_visualize, 8.0); // size
+                    show_trajectory_keyframe(rb_t_, 0.0, 0.0, 1.0, 1.0);
+                }
+                cv::Mat campose_vec6d_to_mat_for_visualize = vec6d_to_homogenous_campose(map_storage.keyframe[keyframe_num].cam_pose);
+                cv::Mat rb_t_ = homogenous_campose_for_keyframe_visualize(campose_vec6d_to_mat_for_visualize, 8.0);
+                show_trajectory_keyframe(rb_t_, 0.0, 1.0, 0.0, 1.0);
                 if(fix_keyframe_parms - fix_keyframe_num == fix_keyframe_num) fix_keyframe_parms++;
         }
     
@@ -1023,6 +1155,11 @@ std::cout << " map_storage size is : " << map_storage.world_xyz.size() << endl;
 
         // glClearColor(1.0,1.0,1.0, 1.0);
         
+        if(loop_detect)
+        {
+            cv::waitKey();
+            loop_detect = false;
+        }
 
         previous_image = current_image;
 

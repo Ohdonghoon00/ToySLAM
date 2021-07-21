@@ -393,8 +393,45 @@ void changeStructure(const cv::Mat &plain, std::vector<cv::Mat> &out)
   }
 }
 
-// Eigen::Vector3d PoseToEigen3d(Map &conversion_pose, int num)
+Eigen::Matrix3d RotationMatToEigen3d(cv::Mat r_)
+{   
+    Eigen::Matrix3d aa;
+    aa <<   r_.at<double>(0, 0), r_.at<double>(0, 1), r_.at<double>(0, 2),
+            r_.at<double>(1, 0), r_.at<double>(1, 1), r_.at<double>(1, 2),
+            r_.at<double>(2, 0), r_.at<double>(2, 1), r_.at<double>(2, 2);
+
+    return aa;
+}
+
+cv::Mat Eigen3dToRotationMat(Eigen::Matrix3d ae)
+{   
+    cv::Mat aa = (cv::Mat_<double>(3, 3) <<     ae(0, 0), ae(0, 1), ae(0, 2),
+                                                ae(1, 0), ae(1, 1), ae(1, 2),
+                                                ae(2, 0), ae(2, 1), ae(2, 2));
+
+
+    return aa;
+}
+
+Eigen::Vector3d PoseToEigen3d(Map &conversion_pose, int num)
+{
+    cv::Mat aqw = vec6d_to_homogenous_campose(conversion_pose.keyframe[num].cam_pose);
+    Eigen::Vector3d abc(aqw.at<double>(0, 3), aqw.at<double>(1, 3), aqw.at<double>(2, 3));
+    return abc;
+}
+
+
+Eigen::Quaterniond getQuaternionFromRotationMatrix(const Eigen::Matrix3d& mat)
+{
+    // Eigen::AngleAxisd aa; 
+    // aa = mat;
+    Eigen::Quaterniond q(mat);// conversion error
+
+    return q;
+}
+
+// Eigen::Quaterniond RotationToQuan(Map &conversion_rot)
 // {
-//     Eigen::Vector3d abc(conversion_pose.keyframe[num].cam_pose[0], conversion_pose.keyframe[num].cam_pose[1], conversion_pose.keyframe[num].cam_pose[2]);
-//     return abc;
+//     Eigen::Quaterniond abc;
+
 // }

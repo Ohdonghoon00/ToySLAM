@@ -57,9 +57,13 @@ void remove_SolvePnP_oulier_ (std::vector<cv::Point3d> &map_point_, std::vector<
 
 void changeStructure(const cv::Mat &plain, std::vector<cv::Mat> &out);
 
-// Eigen::Vector3d PoseToEigen3d(Map &conversion_pose, int num);
+Eigen::Matrix3d RotationMatToEigen3d(cv::Mat r_);
 
+cv::Mat Eigen3dToRotationMat(Eigen::Matrix3d ae);
 
+Eigen::Vector3d PoseToEigen3d(Map &conversion_pose, int num);
+
+Eigen::Quaterniond getQuaternionFromRotationMatrix(const Eigen::Matrix3d& mat);
 // Eigen::Quaterniond RotationToQuan(Map &conversion_rot)
 // {
 //     Eigen::Quaterniond abc;
