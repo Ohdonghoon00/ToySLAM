@@ -166,13 +166,13 @@ int main(int argc, char **argv)
     // pose graph
 
     // create linear solver
-    std::unique_ptr<g2o::BlockSolver_7_3::LinearSolverType> linear_solver = 
-    g2o::make_unique<g2o::LinearSolverDense<g2o::BlockSolver_7_3::PoseMatrixType>>();
+    std::unique_ptr<g2o::BlockSolver_6_3::LinearSolverType> linear_solver = 
+    g2o::make_unique<g2o::LinearSolverDense<g2o::BlockSolver_6_3::PoseMatrixType>>();
                
                     
     // create block solver                            
-    std::unique_ptr<g2o::BlockSolver_7_3> block_solver =
-    g2o::make_unique<g2o::BlockSolver_7_3>(std::move(linear_solver));
+    std::unique_ptr<g2o::BlockSolver_6_3> block_solver =
+    g2o::make_unique<g2o::BlockSolver_6_3>(std::move(linear_solver));
 
     g2o::OptimizationAlgorithm* algorithm
     = new g2o::OptimizationAlgorithmLevenberg(std::move(block_solver));
@@ -181,9 +181,9 @@ int main(int argc, char **argv)
     optimizer->setAlgorithm(algorithm);
     optimizer->setVerbose(true); 
 
-    g2o::SparseOptimizer optimizer_sim3;
-    optimizer_sim3.setAlgorithm(algorithm);
-    optimizer_sim3.setVerbose(true);   
+    // g2o::SparseOptimizer optimizer_sim3;
+    // optimizer_sim3.setAlgorithm(algorithm);
+    // optimizer_sim3.setVerbose(true);   
     
     while(true)
     {
@@ -809,7 +809,7 @@ std::cout << " fixed keyframe num  : " << j << endl;
                 // cv::waitKey();
                 vec_pose.push_back(PG_Pose);
 
-                addPoseVertex(optimizer, PG_Pose, true);
+                addPoseVertex(optimizer, PG_Pose, false);
                 
                 // add edge to posegraph
                 g2o::SE3Quat relpose;

@@ -20,8 +20,8 @@ void addPoseVertex(g2o::SparseOptimizer* optimizer, g2o::SE3Quat& pose, bool set
               << " r=" << pose.rotation().coeffs().transpose() << std::endl;
     g2o::VertexSE3* v_se3 = new g2o::VertexSE3;
     v_se3->setId(getNewID());
-    if(set_fixed)
-        v_se3->setEstimate(pose);
+    
+    v_se3->setEstimate(pose);
     v_se3->setFixed(set_fixed);
     optimizer->addVertex(v_se3);
 }
