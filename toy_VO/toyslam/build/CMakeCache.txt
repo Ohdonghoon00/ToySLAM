@@ -251,7 +251,7 @@ toyslam_bundleadjustment_library_LIB_DEPENDS:STATIC=general;Ceres::ceres;general
 toyslam_feature_library_LIB_DEPENDS:STATIC=
 
 //Dependencies for the target
-toyslam_graph_optimization_library_LIB_DEPENDS:STATIC=general;DBoW2;general;g2o_core;general;g2o_types_sba;general;g2o_types_slam3d;general;g2o_solver_csparse;general;g2o_stuff;general;g2o_csparse_extension;general;g2o_solver_cholmod;general;cholmod;
+toyslam_graph_optimization_library_LIB_DEPENDS:STATIC=general;DBoW2;general;g2o_core;general;g2o_types_sba;general;g2o_types_slam3d;general;g2o_solver_csparse;general;g2o_stuff;general;g2o_csparse_extension;general;g2o_solver_cholmod;general;g2o_types_sim3;general;cholmod;
 
 //Dependencies for target
 toyslam_track_library_LIB_DEPENDS:STATIC=

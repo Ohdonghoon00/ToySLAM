@@ -22,6 +22,7 @@ set(G2O_LIBS
   g2o_stuff 
   g2o_csparse_extension
   g2o_solver_cholmod
+  g2o_types_sim3
   cholmod
 )
 

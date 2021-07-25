@@ -726,6 +726,7 @@ CMakeFiles/toyslam_main.dir/toyslam_main.cpp.o: /usr/local/include/g2o/core/opti
 CMakeFiles/toyslam_main.dir/toyslam_main.cpp.o: /usr/local/include/g2o/core/parameter.h
 CMakeFiles/toyslam_main.dir/toyslam_main.cpp.o: /usr/local/include/g2o/core/parameter_container.h
 CMakeFiles/toyslam_main.dir/toyslam_main.cpp.o: /usr/local/include/g2o/core/robust_kernel.h
+CMakeFiles/toyslam_main.dir/toyslam_main.cpp.o: /usr/local/include/g2o/core/robust_kernel_impl.h
 CMakeFiles/toyslam_main.dir/toyslam_main.cpp.o: /usr/local/include/g2o/core/solver.h
 CMakeFiles/toyslam_main.dir/toyslam_main.cpp.o: /usr/local/include/g2o/core/sparse_block_matrix.h
 CMakeFiles/toyslam_main.dir/toyslam_main.cpp.o: /usr/local/include/g2o/core/sparse_block_matrix.hpp

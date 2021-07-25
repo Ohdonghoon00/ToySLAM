@@ -164,26 +164,35 @@ int main(int argc, char **argv)
     frame_storage.push_back(copy_previous_image); 
         
     // pose graph
-
+    // SE3
     // create linear solver
-    std::unique_ptr<g2o::BlockSolver_6_3::LinearSolverType> linear_solver = 
-    g2o::make_unique<g2o::LinearSolverDense<g2o::BlockSolver_6_3::PoseMatrixType>>();
+    std::unique_ptr<g2o::BlockSolver_7_3::LinearSolverType> linear_solver = 
+    g2o::make_unique<g2o::LinearSolverDense<g2o::BlockSolver_7_3::PoseMatrixType>>();
                
                     
     // create block solver                            
-    std::unique_ptr<g2o::BlockSolver_6_3> block_solver =
-    g2o::make_unique<g2o::BlockSolver_6_3>(std::move(linear_solver));
+    std::unique_ptr<g2o::BlockSolver_7_3> block_solver =
+    g2o::make_unique<g2o::BlockSolver_7_3>(std::move(linear_solver));
 
     g2o::OptimizationAlgorithm* algorithm
     = new g2o::OptimizationAlgorithmLevenberg(std::move(block_solver));
 
+
     g2o::SparseOptimizer* optimizer = new SparseOptimizer;
     optimizer->setAlgorithm(algorithm);
     optimizer->setVerbose(true); 
+    
+    // sim3 create linear solver and block solver
 
-    // g2o::SparseOptimizer optimizer_sim3;
-    // optimizer_sim3.setAlgorithm(algorithm);
-    // optimizer_sim3.setVerbose(true);   
+    typedef g2o::BlockSolver<g2o::BlockSolverTraits<7, 7>> BlockSolverType;
+    typedef g2o::LinearSolverEigen<BlockSolverType::PoseMatrixType> LinearSolverType;
+    
+    auto solver = new g2o::OptimizationAlgorithmLevenberg(
+    g2o::make_unique<BlockSolverType>(g2o::make_unique<LinearSolverType>()));
+
+    g2o::SparseOptimizer optimizer_sim3;
+    optimizer_sim3.setAlgorithm(solver);
+    optimizer_sim3.setVerbose(true);   
     
     while(true)
     {
@@ -443,6 +452,9 @@ std::cout << " same point :  " << same_point_num << " different point num  : " <
                 g2o::SE3Quat PG_Pose(PoseGraphQuternion, PoseGraphTranslation);
                 vec_pose.push_back(PG_Pose);
                 addPoseVertex(optimizer, PG_Pose, true);
+
+
+
 
                 // Reprojection 3D to 2D current image
                 std::cout << "reprojection 3D to 2D initialize stage " << endl;
@@ -815,7 +827,7 @@ std::cout << " fixed keyframe num  : " << j << endl;
                 g2o::SE3Quat relpose;
                 relpose = vec_pose[keyframe_num-1].inverse() * vec_pose[keyframe_num];
                 addEdgePosePose(optimizer, keyframe_num-1, keyframe_num, relpose);
-                
+
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////                
@@ -883,6 +895,48 @@ cout << "erase nearest keyframe "  << ". " << ret[0] << endl;
                         std::cout << loop_relpose <<std::endl;     
                         addEdgePosePose(optimizer, loop_detect_frame_id, keyframe_num, loop_relpose);
                         
+                        // convert to se3 to sim3
+                        for(int i = 0; i < vec_pose.size(); i++)
+                        {
+                            g2o::VertexSE3* v_se3 = static_cast<g2o::VertexSE3*>(optimizer->vertex(i));
+                            g2o::VertexSim3Expmap* v_sim3 = new g2o::VertexSim3Expmap();
+                            v_sim3->setId(i);
+                            v_sim3->setMarginalized(false);
+                            ToVertexSim3(*v_se3, v_sim3);
+                            v_sim3->setFixed(false);
+                            if (i == 0) v_sim3->setFixed(true);
+                            optimizer_sim3.addVertex(v_sim3);
+
+                            
+                        }
+
+
+                        // convert to edge se3 to sim3
+                        int edge_index = 0;
+                        for (auto& tmp : optimizer->edges()) 
+                        {
+                            g2o::EdgeSE3* e_se3 = static_cast<g2o::EdgeSE3*>(tmp);
+                            int idx0 = e_se3->vertex(0)->id();
+                            int idx1 = e_se3->vertex(1)->id();
+                            g2o::EdgeSim3* e_sim3 = new g2o::EdgeSim3();
+                            
+                            ToEdgeSim3(*e_se3, e_sim3);
+                            e_sim3->setId(edge_index++);
+                            e_sim3->setVertex(0, optimizer_sim3.vertices()[idx0]);
+                            e_sim3->setVertex(1, optimizer_sim3.vertices()[idx1]);
+                            e_sim3->information() = Eigen::Matrix<double, 7, 7>::Identity();
+
+
+                            g2o::Sim3 sim3=e_sim3->measurement();
+                            Eigen::Matrix3d r = sim3.rotation().toRotationMatrix();
+                            Eigen::Vector3d t = sim3.translation();
+                            // cout<<"idx0: "<<idx0<<"idx1: "<<idx1<<"\n";
+                            // cout<<edge_index<<"\n";
+                            // cout<<t<<"\n";
+
+
+                            optimizer_sim3.addEdge(e_sim3);
+                        }                      
                         // for(int i = 0; i < vec_pose.size(); i++)
                         // {
                         //     g2o::VertexSE3* v_se3 = static_cast<g2o::VertexSE3*>(optimizer->vertex(i));
@@ -891,17 +945,21 @@ cout << "erase nearest keyframe "  << ". " << ret[0] << endl;
                         //     optimizer_sim3.addVertex(v_sim3);
                         // }
          
-                        optimizer->initializeOptimization();
-                        optimizer->optimize(100);
+                        optimizer_sim3.initializeOptimization();
+                        optimizer_sim3.optimize(100);
                         
                         std::cout << "vec_pose.size()" << vec_pose.size() << std::endl;
                         for(int i = 0; i < vec_pose.size(); i++)
                         {
-                            g2o::VertexSE3* vtx = static_cast<g2o::VertexSE3*>(optimizer->vertex(i));
-                            g2o::Isometry3 se3 = vtx->estimate();
-                            // std::cout << "se3" << se3 << std::endl;
-                            Eigen::Matrix3d r_ = se3.rotation();
-                            Eigen::Vector3d t_ = se3.translation();
+                            g2o::VertexSim3Expmap* vtx = static_cast<g2o::VertexSim3Expmap*>(optimizer_sim3.vertex(i));
+                            g2o::Sim3 sim3 = vtx->estimate();
+
+                            
+                            // g2o::VertexSE3* vtx = static_cast<g2o::VertexSE3*>(optimizer->vertex(i));
+                            // g2o::Isometry3 se3 = vtx->estimate();
+                            // // std::cout << "se3" << se3 << std::endl;
+                            Eigen::Matrix3d r_ = sim3.rotation().toRotationMatrix();
+                            Eigen::Vector3d t_ = sim3.translation();
                             cv::Mat rot = Eigen3dToRotationMat(r_);
                             cv::Rodrigues(rot, rot);
                             map_storage.keyframe[i].cam_pose[0] = rot.at<double>(0, 0);
@@ -1115,15 +1173,20 @@ std::cout << " map_storage size is : " << map_storage.world_xyz.size() << endl;
         {   
             if(keyframe_num % 3 == 0)
             {
-            for( int i = 0 ; i < map_storage.keyframe[keyframe_num].pts.size(); i++)
+            for( int i = 0 ; i < map_storage.world_xyz.size(); i++)
             // {
                 // for (std::map<int, cv::Point3d>::iterator itr = map_storage.world_xyz.begin(); itr != map_storage.world_xyz.end(); ++itr) 
                 {
                 //    itr->second
-                                
+                    // for ( int k = 0; i < inlier_storage[i].rows; k++)
+                    // {
+                        // int show_map_id = map_storage.world_xyz[i];
+                        GLdouble X_map(map_storage.world_xyz[i].x), Y_map(map_storage.world_xyz[i].y), Z_map(map_storage.world_xyz[i].z);
+                        show_trajectory(X_map, Y_map, Z_map, 0.0, 0.0, 0.0, 0.01);              
+                    // }          
                 
-                    int show_map_id = map_storage.keyframe[keyframe_num].pts_id[i];
-                    GLdouble X_map(map_storage.world_xyz[show_map_id].x), Y_map(map_storage.world_xyz[show_map_id].y), Z_map(map_storage.world_xyz[show_map_id].z);
+                    // int show_map_id = map_storage.keyframe[keyframe_num].pts_id[i];
+                    // GLdouble X_map(map_storage.world_xyz[show_map_id].x), Y_map(map_storage.world_xyz[show_map_id].y), Z_map(map_storage.world_xyz[show_map_id].z);
                     // show_trajectory(X_map, Y_map, Z_map, 0.0, 0.0, 0.0, 0.01);
                 }
             // }
