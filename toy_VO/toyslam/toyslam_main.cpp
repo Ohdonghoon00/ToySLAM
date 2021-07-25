@@ -423,12 +423,12 @@ std::cout << " same point :  " << same_point_num << " different point num  : " <
                     ceres::CostFunction* cost_func = ReprojectionError::create(map_storage.keyframe[0].pts[i], f, cv::Point2d(c.x, c.y));
                     double* camera = (double*)(&map_storage.keyframe[0].cam_pose);
                     double* X_ = (double*)(&(map_storage.world_xyz[i]));
-                    initilize_ba.AddResidualBlock(cost_func, NULL, camera, X_); 
+                    initilize_ba.AddResidualBlock(cost_func, new CauchyLoss(0.5), camera, X_); 
                 }            
                             
                 // ceres option       
                 ceres::Solver::Options options;
-                options.linear_solver_type = ceres::ITERATIVE_SCHUR;
+                options.linear_solver_type = ceres::DENSE_SCHUR;
                 options.num_threads = 8;
                 options.minimizer_progress_to_stdout = true;
                 ceres::Solver::Summary summary;
@@ -560,12 +560,12 @@ std::cout << " map point size for motion only BA : " << map_point_for_motion_BA.
                 ceres::CostFunction* motion_only_cost_func = motion_only_ReprojectionError::create(current_image_pts_for_motion_BA[i], map_point_for_motion_BA[i], f, cv::Point2d(c.x, c.y));
                 double* camera_ = (double*)(&current_image.cam_pose);
         
-                motion_only_ba.AddResidualBlock(motion_only_cost_func, NULL, camera_); 
+                motion_only_ba.AddResidualBlock(motion_only_cost_func, new CauchyLoss(0.5), camera_); 
             }            
             
             // ceres option       
             ceres::Solver::Options options;
-            options.linear_solver_type = ceres::ITERATIVE_SCHUR;
+            options.linear_solver_type = ceres::DENSE_SCHUR;
             options.num_threads = 8;
             options.minimizer_progress_to_stdout = false;
             ceres::Solver::Summary summary;
@@ -747,7 +747,7 @@ std::cout << " active keyframe num  : " << j << endl;
                         double* camera = (double*)(&map_storage.keyframe[j].cam_pose);
                         int id_ = map_storage.keyframe[j].pts_id[inlier_storage[j].at<int>(i, 0)];
                         double* X_ = (double*)(&(map_storage.world_xyz[id_]));
-                        keyframe_ba.AddResidualBlock(keyframe_cost_func, NULL, camera, X_); 
+                        keyframe_ba.AddResidualBlock(keyframe_cost_func, new CauchyLoss(0.3), camera, X_); 
 
                     }            
                 }
@@ -764,7 +764,7 @@ std::cout << " fixed keyframe num  : " << j << endl;
                         ceres::CostFunction* fix_keyframe_cost_func = map_point_only_ReprojectionError::create(map_storage.keyframe[j].pts[inlier_storage[j].at<int>(i, 0)], map_storage.keyframe[j].cam_pose, f, cv::Point2d(c.x, c.y));
                         int id_ = map_storage.keyframe[j].pts_id[inlier_storage[j].at<int>(i, 0)];
                         double* X_ = (double*)(&(map_storage.world_xyz[id_]));
-                        keyframe_ba.AddResidualBlock(fix_keyframe_cost_func, NULL, X_); 
+                        keyframe_ba.AddResidualBlock(fix_keyframe_cost_func, new CauchyLoss(0.3), X_); 
                                 
                     }            
                 }                    
@@ -772,7 +772,7 @@ std::cout << " fixed keyframe num  : " << j << endl;
                                 
                 // ceres option       
                 ceres::Solver::Options options;
-                options.linear_solver_type = ceres::ITERATIVE_SCHUR;
+                options.linear_solver_type = ceres::DENSE_SCHUR;
                 options.num_threads = 8;
                 options.minimizer_progress_to_stdout = false;
                 ceres::Solver::Summary summary;
