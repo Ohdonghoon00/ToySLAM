@@ -41,3 +41,5 @@ void ToVertexSim3(const g2o::VertexSE3 &v_se3,
                   g2o::VertexSim3Expmap *const v_sim3);
 
 void ToEdgeSim3(const g2o::EdgeSE3 &e_se3, g2o::EdgeSim3 *const e_sim3);
+
+void ToEdgeSim3_loop(const g2o::EdgeSE3 &e_se3, g2o::EdgeSim3 *const e_sim3);

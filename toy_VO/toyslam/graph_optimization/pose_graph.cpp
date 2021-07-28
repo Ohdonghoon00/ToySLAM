@@ -70,3 +70,17 @@ void ToEdgeSim3(const g2o::EdgeSE3 &e_se3, g2o::EdgeSim3 *const e_sim3)
 
   e_sim3->setMeasurement(sim3);
 }
+
+void ToEdgeSim3_loop(const g2o::EdgeSE3 &e_se3, g2o::EdgeSim3 *const e_sim3)
+{
+  Eigen::Isometry3d se3 = e_se3.measurement().inverse();
+  Eigen::Matrix3d r = se3.rotation();
+  Eigen::Vector3d t = se3.translation();
+
+  // cout<<"Convert edges to Sim3:"<<"\n";
+  // cout<<"r: "<<se3.rotation()<<"\n";
+  // cout<<"t: "<<se3.translation()<<"\n";
+  g2o::Sim3 sim3(r, t, 0.5);
+
+  e_sim3->setMeasurement(sim3);
+}
