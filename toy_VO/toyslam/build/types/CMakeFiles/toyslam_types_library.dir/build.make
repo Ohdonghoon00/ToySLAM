@@ -43,10 +43,10 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam
+CMAKE_SOURCE_DIR = /home/donghoon/ToySLAM/toy_VO/toyslam
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/build
+CMAKE_BINARY_DIR = /home/donghoon/ToySLAM/toy_VO/toyslam/build
 
 # Include any dependencies generated for this target.
 include types/CMakeFiles/toyslam_types_library.dir/depend.make
@@ -59,16 +59,16 @@ include types/CMakeFiles/toyslam_types_library.dir/flags.make
 
 types/CMakeFiles/toyslam_types_library.dir/Frame.cpp.o: types/CMakeFiles/toyslam_types_library.dir/flags.make
 types/CMakeFiles/toyslam_types_library.dir/Frame.cpp.o: ../types/Frame.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object types/CMakeFiles/toyslam_types_library.dir/Frame.cpp.o"
-	cd /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/build/types && /usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/toyslam_types_library.dir/Frame.cpp.o -c /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/types/Frame.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/donghoon/ToySLAM/toy_VO/toyslam/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object types/CMakeFiles/toyslam_types_library.dir/Frame.cpp.o"
+	cd /home/donghoon/ToySLAM/toy_VO/toyslam/build/types && /usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/toyslam_types_library.dir/Frame.cpp.o -c /home/donghoon/ToySLAM/toy_VO/toyslam/types/Frame.cpp
 
 types/CMakeFiles/toyslam_types_library.dir/Frame.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/toyslam_types_library.dir/Frame.cpp.i"
-	cd /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/build/types && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/types/Frame.cpp > CMakeFiles/toyslam_types_library.dir/Frame.cpp.i
+	cd /home/donghoon/ToySLAM/toy_VO/toyslam/build/types && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/donghoon/ToySLAM/toy_VO/toyslam/types/Frame.cpp > CMakeFiles/toyslam_types_library.dir/Frame.cpp.i
 
 types/CMakeFiles/toyslam_types_library.dir/Frame.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/toyslam_types_library.dir/Frame.cpp.s"
-	cd /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/build/types && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/types/Frame.cpp -o CMakeFiles/toyslam_types_library.dir/Frame.cpp.s
+	cd /home/donghoon/ToySLAM/toy_VO/toyslam/build/types && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/donghoon/ToySLAM/toy_VO/toyslam/types/Frame.cpp -o CMakeFiles/toyslam_types_library.dir/Frame.cpp.s
 
 types/CMakeFiles/toyslam_types_library.dir/Frame.cpp.o.requires:
 
@@ -83,16 +83,16 @@ types/CMakeFiles/toyslam_types_library.dir/Frame.cpp.o.provides.build: types/CMa
 
 types/CMakeFiles/toyslam_types_library.dir/Map.cpp.o: types/CMakeFiles/toyslam_types_library.dir/flags.make
 types/CMakeFiles/toyslam_types_library.dir/Map.cpp.o: ../types/Map.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object types/CMakeFiles/toyslam_types_library.dir/Map.cpp.o"
-	cd /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/build/types && /usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/toyslam_types_library.dir/Map.cpp.o -c /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/types/Map.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/donghoon/ToySLAM/toy_VO/toyslam/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object types/CMakeFiles/toyslam_types_library.dir/Map.cpp.o"
+	cd /home/donghoon/ToySLAM/toy_VO/toyslam/build/types && /usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/toyslam_types_library.dir/Map.cpp.o -c /home/donghoon/ToySLAM/toy_VO/toyslam/types/Map.cpp
 
 types/CMakeFiles/toyslam_types_library.dir/Map.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/toyslam_types_library.dir/Map.cpp.i"
-	cd /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/build/types && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/types/Map.cpp > CMakeFiles/toyslam_types_library.dir/Map.cpp.i
+	cd /home/donghoon/ToySLAM/toy_VO/toyslam/build/types && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/donghoon/ToySLAM/toy_VO/toyslam/types/Map.cpp > CMakeFiles/toyslam_types_library.dir/Map.cpp.i
 
 types/CMakeFiles/toyslam_types_library.dir/Map.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/toyslam_types_library.dir/Map.cpp.s"
-	cd /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/build/types && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/types/Map.cpp -o CMakeFiles/toyslam_types_library.dir/Map.cpp.s
+	cd /home/donghoon/ToySLAM/toy_VO/toyslam/build/types && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/donghoon/ToySLAM/toy_VO/toyslam/types/Map.cpp -o CMakeFiles/toyslam_types_library.dir/Map.cpp.s
 
 types/CMakeFiles/toyslam_types_library.dir/Map.cpp.o.requires:
 
@@ -107,16 +107,16 @@ types/CMakeFiles/toyslam_types_library.dir/Map.cpp.o.provides.build: types/CMake
 
 types/CMakeFiles/toyslam_types_library.dir/Data.cpp.o: types/CMakeFiles/toyslam_types_library.dir/flags.make
 types/CMakeFiles/toyslam_types_library.dir/Data.cpp.o: ../types/Data.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object types/CMakeFiles/toyslam_types_library.dir/Data.cpp.o"
-	cd /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/build/types && /usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/toyslam_types_library.dir/Data.cpp.o -c /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/types/Data.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/donghoon/ToySLAM/toy_VO/toyslam/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object types/CMakeFiles/toyslam_types_library.dir/Data.cpp.o"
+	cd /home/donghoon/ToySLAM/toy_VO/toyslam/build/types && /usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/toyslam_types_library.dir/Data.cpp.o -c /home/donghoon/ToySLAM/toy_VO/toyslam/types/Data.cpp
 
 types/CMakeFiles/toyslam_types_library.dir/Data.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/toyslam_types_library.dir/Data.cpp.i"
-	cd /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/build/types && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/types/Data.cpp > CMakeFiles/toyslam_types_library.dir/Data.cpp.i
+	cd /home/donghoon/ToySLAM/toy_VO/toyslam/build/types && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/donghoon/ToySLAM/toy_VO/toyslam/types/Data.cpp > CMakeFiles/toyslam_types_library.dir/Data.cpp.i
 
 types/CMakeFiles/toyslam_types_library.dir/Data.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/toyslam_types_library.dir/Data.cpp.s"
-	cd /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/build/types && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/types/Data.cpp -o CMakeFiles/toyslam_types_library.dir/Data.cpp.s
+	cd /home/donghoon/ToySLAM/toy_VO/toyslam/build/types && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/donghoon/ToySLAM/toy_VO/toyslam/types/Data.cpp -o CMakeFiles/toyslam_types_library.dir/Data.cpp.s
 
 types/CMakeFiles/toyslam_types_library.dir/Data.cpp.o.requires:
 
@@ -131,16 +131,16 @@ types/CMakeFiles/toyslam_types_library.dir/Data.cpp.o.provides.build: types/CMak
 
 types/CMakeFiles/toyslam_types_library.dir/parameter.cpp.o: types/CMakeFiles/toyslam_types_library.dir/flags.make
 types/CMakeFiles/toyslam_types_library.dir/parameter.cpp.o: ../types/parameter.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object types/CMakeFiles/toyslam_types_library.dir/parameter.cpp.o"
-	cd /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/build/types && /usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/toyslam_types_library.dir/parameter.cpp.o -c /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/types/parameter.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/donghoon/ToySLAM/toy_VO/toyslam/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object types/CMakeFiles/toyslam_types_library.dir/parameter.cpp.o"
+	cd /home/donghoon/ToySLAM/toy_VO/toyslam/build/types && /usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/toyslam_types_library.dir/parameter.cpp.o -c /home/donghoon/ToySLAM/toy_VO/toyslam/types/parameter.cpp
 
 types/CMakeFiles/toyslam_types_library.dir/parameter.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/toyslam_types_library.dir/parameter.cpp.i"
-	cd /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/build/types && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/types/parameter.cpp > CMakeFiles/toyslam_types_library.dir/parameter.cpp.i
+	cd /home/donghoon/ToySLAM/toy_VO/toyslam/build/types && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/donghoon/ToySLAM/toy_VO/toyslam/types/parameter.cpp > CMakeFiles/toyslam_types_library.dir/parameter.cpp.i
 
 types/CMakeFiles/toyslam_types_library.dir/parameter.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/toyslam_types_library.dir/parameter.cpp.s"
-	cd /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/build/types && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/types/parameter.cpp -o CMakeFiles/toyslam_types_library.dir/parameter.cpp.s
+	cd /home/donghoon/ToySLAM/toy_VO/toyslam/build/types && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/donghoon/ToySLAM/toy_VO/toyslam/types/parameter.cpp -o CMakeFiles/toyslam_types_library.dir/parameter.cpp.s
 
 types/CMakeFiles/toyslam_types_library.dir/parameter.cpp.o.requires:
 
@@ -169,9 +169,9 @@ types/libtoyslam_types_library.a: types/CMakeFiles/toyslam_types_library.dir/Dat
 types/libtoyslam_types_library.a: types/CMakeFiles/toyslam_types_library.dir/parameter.cpp.o
 types/libtoyslam_types_library.a: types/CMakeFiles/toyslam_types_library.dir/build.make
 types/libtoyslam_types_library.a: types/CMakeFiles/toyslam_types_library.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Linking CXX static library libtoyslam_types_library.a"
-	cd /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/build/types && $(CMAKE_COMMAND) -P CMakeFiles/toyslam_types_library.dir/cmake_clean_target.cmake
-	cd /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/build/types && $(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/toyslam_types_library.dir/link.txt --verbose=$(VERBOSE)
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/donghoon/ToySLAM/toy_VO/toyslam/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Linking CXX static library libtoyslam_types_library.a"
+	cd /home/donghoon/ToySLAM/toy_VO/toyslam/build/types && $(CMAKE_COMMAND) -P CMakeFiles/toyslam_types_library.dir/cmake_clean_target.cmake
+	cd /home/donghoon/ToySLAM/toy_VO/toyslam/build/types && $(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/toyslam_types_library.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.
 types/CMakeFiles/toyslam_types_library.dir/build: types/libtoyslam_types_library.a
@@ -186,10 +186,10 @@ types/CMakeFiles/toyslam_types_library.dir/requires: types/CMakeFiles/toyslam_ty
 .PHONY : types/CMakeFiles/toyslam_types_library.dir/requires
 
 types/CMakeFiles/toyslam_types_library.dir/clean:
-	cd /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/build/types && $(CMAKE_COMMAND) -P CMakeFiles/toyslam_types_library.dir/cmake_clean.cmake
+	cd /home/donghoon/ToySLAM/toy_VO/toyslam/build/types && $(CMAKE_COMMAND) -P CMakeFiles/toyslam_types_library.dir/cmake_clean.cmake
 .PHONY : types/CMakeFiles/toyslam_types_library.dir/clean
 
 types/CMakeFiles/toyslam_types_library.dir/depend:
-	cd /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/types /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/build /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/build/types /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/build/types/CMakeFiles/toyslam_types_library.dir/DependInfo.cmake --color=$(COLOR)
+	cd /home/donghoon/ToySLAM/toy_VO/toyslam/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/donghoon/ToySLAM/toy_VO/toyslam /home/donghoon/ToySLAM/toy_VO/toyslam/types /home/donghoon/ToySLAM/toy_VO/toyslam/build /home/donghoon/ToySLAM/toy_VO/toyslam/build/types /home/donghoon/ToySLAM/toy_VO/toyslam/build/types/CMakeFiles/toyslam_types_library.dir/DependInfo.cmake --color=$(COLOR)
 .PHONY : types/CMakeFiles/toyslam_types_library.dir/depend
 

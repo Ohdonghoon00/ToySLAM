@@ -48,10 +48,10 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam
+CMAKE_SOURCE_DIR = /home/donghoon/ToySLAM/toy_VO/toyslam
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/build
+CMAKE_BINARY_DIR = /home/donghoon/ToySLAM/toy_VO/toyslam/build
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -80,14 +80,14 @@ edit_cache/fast: edit_cache
 
 # The main all target
 all: cmake_check_build_system
-	cd /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/build && $(CMAKE_COMMAND) -E cmake_progress_start /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/build/CMakeFiles /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/build/feature/CMakeFiles/progress.marks
-	cd /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/build && $(MAKE) -f CMakeFiles/Makefile2 feature/all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/build/CMakeFiles 0
+	cd /home/donghoon/ToySLAM/toy_VO/toyslam/build && $(CMAKE_COMMAND) -E cmake_progress_start /home/donghoon/ToySLAM/toy_VO/toyslam/build/CMakeFiles /home/donghoon/ToySLAM/toy_VO/toyslam/build/feature/CMakeFiles/progress.marks
+	cd /home/donghoon/ToySLAM/toy_VO/toyslam/build && $(MAKE) -f CMakeFiles/Makefile2 feature/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/donghoon/ToySLAM/toy_VO/toyslam/build/CMakeFiles 0
 .PHONY : all
 
 # The main clean target
 clean:
-	cd /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/build && $(MAKE) -f CMakeFiles/Makefile2 feature/clean
+	cd /home/donghoon/ToySLAM/toy_VO/toyslam/build && $(MAKE) -f CMakeFiles/Makefile2 feature/clean
 .PHONY : clean
 
 # The main clean target
@@ -97,22 +97,22 @@ clean/fast: clean
 
 # Prepare targets for installation.
 preinstall: all
-	cd /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/build && $(MAKE) -f CMakeFiles/Makefile2 feature/preinstall
+	cd /home/donghoon/ToySLAM/toy_VO/toyslam/build && $(MAKE) -f CMakeFiles/Makefile2 feature/preinstall
 .PHONY : preinstall
 
 # Prepare targets for installation.
 preinstall/fast:
-	cd /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/build && $(MAKE) -f CMakeFiles/Makefile2 feature/preinstall
+	cd /home/donghoon/ToySLAM/toy_VO/toyslam/build && $(MAKE) -f CMakeFiles/Makefile2 feature/preinstall
 .PHONY : preinstall/fast
 
 # clear depends
 depend:
-	cd /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/build && $(CMAKE_COMMAND) -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 1
+	cd /home/donghoon/ToySLAM/toy_VO/toyslam/build && $(CMAKE_COMMAND) -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 1
 .PHONY : depend
 
 # Convenience name for target.
 feature/CMakeFiles/toyslam_feature_library.dir/rule:
-	cd /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/build && $(MAKE) -f CMakeFiles/Makefile2 feature/CMakeFiles/toyslam_feature_library.dir/rule
+	cd /home/donghoon/ToySLAM/toy_VO/toyslam/build && $(MAKE) -f CMakeFiles/Makefile2 feature/CMakeFiles/toyslam_feature_library.dir/rule
 .PHONY : feature/CMakeFiles/toyslam_feature_library.dir/rule
 
 # Convenience name for target.
@@ -122,7 +122,7 @@ toyslam_feature_library: feature/CMakeFiles/toyslam_feature_library.dir/rule
 
 # fast build rule for target.
 toyslam_feature_library/fast:
-	cd /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/build && $(MAKE) -f feature/CMakeFiles/toyslam_feature_library.dir/build.make feature/CMakeFiles/toyslam_feature_library.dir/build
+	cd /home/donghoon/ToySLAM/toy_VO/toyslam/build && $(MAKE) -f feature/CMakeFiles/toyslam_feature_library.dir/build.make feature/CMakeFiles/toyslam_feature_library.dir/build
 .PHONY : toyslam_feature_library/fast
 
 aligner.o: aligner.cpp.o
@@ -131,7 +131,7 @@ aligner.o: aligner.cpp.o
 
 # target to build an object file
 aligner.cpp.o:
-	cd /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/build && $(MAKE) -f feature/CMakeFiles/toyslam_feature_library.dir/build.make feature/CMakeFiles/toyslam_feature_library.dir/aligner.cpp.o
+	cd /home/donghoon/ToySLAM/toy_VO/toyslam/build && $(MAKE) -f feature/CMakeFiles/toyslam_feature_library.dir/build.make feature/CMakeFiles/toyslam_feature_library.dir/aligner.cpp.o
 .PHONY : aligner.cpp.o
 
 aligner.i: aligner.cpp.i
@@ -140,7 +140,7 @@ aligner.i: aligner.cpp.i
 
 # target to preprocess a source file
 aligner.cpp.i:
-	cd /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/build && $(MAKE) -f feature/CMakeFiles/toyslam_feature_library.dir/build.make feature/CMakeFiles/toyslam_feature_library.dir/aligner.cpp.i
+	cd /home/donghoon/ToySLAM/toy_VO/toyslam/build && $(MAKE) -f feature/CMakeFiles/toyslam_feature_library.dir/build.make feature/CMakeFiles/toyslam_feature_library.dir/aligner.cpp.i
 .PHONY : aligner.cpp.i
 
 aligner.s: aligner.cpp.s
@@ -149,7 +149,7 @@ aligner.s: aligner.cpp.s
 
 # target to generate assembly for a file
 aligner.cpp.s:
-	cd /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/build && $(MAKE) -f feature/CMakeFiles/toyslam_feature_library.dir/build.make feature/CMakeFiles/toyslam_feature_library.dir/aligner.cpp.s
+	cd /home/donghoon/ToySLAM/toy_VO/toyslam/build && $(MAKE) -f feature/CMakeFiles/toyslam_feature_library.dir/build.make feature/CMakeFiles/toyslam_feature_library.dir/aligner.cpp.s
 .PHONY : aligner.cpp.s
 
 keypoint.o: keypoint.cpp.o
@@ -158,7 +158,7 @@ keypoint.o: keypoint.cpp.o
 
 # target to build an object file
 keypoint.cpp.o:
-	cd /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/build && $(MAKE) -f feature/CMakeFiles/toyslam_feature_library.dir/build.make feature/CMakeFiles/toyslam_feature_library.dir/keypoint.cpp.o
+	cd /home/donghoon/ToySLAM/toy_VO/toyslam/build && $(MAKE) -f feature/CMakeFiles/toyslam_feature_library.dir/build.make feature/CMakeFiles/toyslam_feature_library.dir/keypoint.cpp.o
 .PHONY : keypoint.cpp.o
 
 keypoint.i: keypoint.cpp.i
@@ -167,7 +167,7 @@ keypoint.i: keypoint.cpp.i
 
 # target to preprocess a source file
 keypoint.cpp.i:
-	cd /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/build && $(MAKE) -f feature/CMakeFiles/toyslam_feature_library.dir/build.make feature/CMakeFiles/toyslam_feature_library.dir/keypoint.cpp.i
+	cd /home/donghoon/ToySLAM/toy_VO/toyslam/build && $(MAKE) -f feature/CMakeFiles/toyslam_feature_library.dir/build.make feature/CMakeFiles/toyslam_feature_library.dir/keypoint.cpp.i
 .PHONY : keypoint.cpp.i
 
 keypoint.s: keypoint.cpp.s
@@ -176,7 +176,7 @@ keypoint.s: keypoint.cpp.s
 
 # target to generate assembly for a file
 keypoint.cpp.s:
-	cd /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/build && $(MAKE) -f feature/CMakeFiles/toyslam_feature_library.dir/build.make feature/CMakeFiles/toyslam_feature_library.dir/keypoint.cpp.s
+	cd /home/donghoon/ToySLAM/toy_VO/toyslam/build && $(MAKE) -f feature/CMakeFiles/toyslam_feature_library.dir/build.make feature/CMakeFiles/toyslam_feature_library.dir/keypoint.cpp.s
 .PHONY : keypoint.cpp.s
 
 # Help Target
@@ -205,6 +205,6 @@ help:
 # No rule that depends on this can have commands that come from listfiles
 # because they might be regenerated.
 cmake_check_build_system:
-	cd /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/build && $(CMAKE_COMMAND) -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 0
+	cd /home/donghoon/ToySLAM/toy_VO/toyslam/build && $(CMAKE_COMMAND) -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 0
 .PHONY : cmake_check_build_system
 

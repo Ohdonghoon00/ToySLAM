@@ -1,4 +1,4 @@
-# Install script for directory: /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam
+# Install script for directory: /home/donghoon/ToySLAM/toy_VO/toyslam
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -39,12 +39,12 @@ endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for each subdirectory.
-  include("/home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/build/types/cmake_install.cmake")
-  include("/home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/build/feature/cmake_install.cmake")
-  include("/home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/build/track/cmake_install.cmake")
-  include("/home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/build/bundleAdjustment/cmake_install.cmake")
-  include("/home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/build/graph_optimization/cmake_install.cmake")
-  include("/home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/build/visualization/cmake_install.cmake")
+  include("/home/donghoon/ToySLAM/toy_VO/toyslam/build/types/cmake_install.cmake")
+  include("/home/donghoon/ToySLAM/toy_VO/toyslam/build/feature/cmake_install.cmake")
+  include("/home/donghoon/ToySLAM/toy_VO/toyslam/build/track/cmake_install.cmake")
+  include("/home/donghoon/ToySLAM/toy_VO/toyslam/build/bundleAdjustment/cmake_install.cmake")
+  include("/home/donghoon/ToySLAM/toy_VO/toyslam/build/graph_optimization/cmake_install.cmake")
+  include("/home/donghoon/ToySLAM/toy_VO/toyslam/build/visualization/cmake_install.cmake")
 
 endif()
 
@@ -56,5 +56,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "/home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/build/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "/home/donghoon/ToySLAM/toy_VO/toyslam/build/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")
