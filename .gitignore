@@ -31,4 +31,4 @@
  *.out
  *.app
 
-/toy_VO/toyslam/build
+/toy_VO/toyslam/build/*
