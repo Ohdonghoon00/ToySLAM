@@ -339,4 +339,9 @@ visualization/CMakeFiles/toyslam_visualization_library.dir/map_viewer.cpp.o: /us
 visualization/CMakeFiles/toyslam_visualization_library.dir/map_viewer.cpp.o: /usr/local/include/opencv4/opencv2/videostab/ring_buffer.hpp
 visualization/CMakeFiles/toyslam_visualization_library.dir/map_viewer.cpp.o: /usr/local/include/opencv4/opencv2/videostab/stabilizer.hpp
 visualization/CMakeFiles/toyslam_visualization_library.dir/map_viewer.cpp.o: /usr/local/include/opencv4/opencv2/videostab/wobble_suppression.hpp
+visualization/CMakeFiles/toyslam_visualization_library.dir/map_viewer.cpp.o: /usr/local/include/opencv4/opencv2/viz.hpp
+visualization/CMakeFiles/toyslam_visualization_library.dir/map_viewer.cpp.o: /usr/local/include/opencv4/opencv2/viz/types.hpp
+visualization/CMakeFiles/toyslam_visualization_library.dir/map_viewer.cpp.o: /usr/local/include/opencv4/opencv2/viz/viz3d.hpp
+visualization/CMakeFiles/toyslam_visualization_library.dir/map_viewer.cpp.o: /usr/local/include/opencv4/opencv2/viz/vizcore.hpp
+visualization/CMakeFiles/toyslam_visualization_library.dir/map_viewer.cpp.o: /usr/local/include/opencv4/opencv2/viz/widgets.hpp
 

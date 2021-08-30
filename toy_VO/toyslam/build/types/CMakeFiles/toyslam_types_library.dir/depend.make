@@ -124,6 +124,11 @@ types/CMakeFiles/toyslam_types_library.dir/Frame.cpp.o: /usr/local/include/openc
 types/CMakeFiles/toyslam_types_library.dir/Frame.cpp.o: /usr/local/include/opencv4/opencv2/videostab/ring_buffer.hpp
 types/CMakeFiles/toyslam_types_library.dir/Frame.cpp.o: /usr/local/include/opencv4/opencv2/videostab/stabilizer.hpp
 types/CMakeFiles/toyslam_types_library.dir/Frame.cpp.o: /usr/local/include/opencv4/opencv2/videostab/wobble_suppression.hpp
+types/CMakeFiles/toyslam_types_library.dir/Frame.cpp.o: /usr/local/include/opencv4/opencv2/viz.hpp
+types/CMakeFiles/toyslam_types_library.dir/Frame.cpp.o: /usr/local/include/opencv4/opencv2/viz/types.hpp
+types/CMakeFiles/toyslam_types_library.dir/Frame.cpp.o: /usr/local/include/opencv4/opencv2/viz/viz3d.hpp
+types/CMakeFiles/toyslam_types_library.dir/Frame.cpp.o: /usr/local/include/opencv4/opencv2/viz/vizcore.hpp
+types/CMakeFiles/toyslam_types_library.dir/Frame.cpp.o: /usr/local/include/opencv4/opencv2/viz/widgets.hpp
 
 types/CMakeFiles/toyslam_types_library.dir/Map.cpp.o: ../types/Frame.h
 types/CMakeFiles/toyslam_types_library.dir/Map.cpp.o: ../types/Map.cpp
@@ -246,6 +251,11 @@ types/CMakeFiles/toyslam_types_library.dir/Map.cpp.o: /usr/local/include/opencv4
 types/CMakeFiles/toyslam_types_library.dir/Map.cpp.o: /usr/local/include/opencv4/opencv2/videostab/ring_buffer.hpp
 types/CMakeFiles/toyslam_types_library.dir/Map.cpp.o: /usr/local/include/opencv4/opencv2/videostab/stabilizer.hpp
 types/CMakeFiles/toyslam_types_library.dir/Map.cpp.o: /usr/local/include/opencv4/opencv2/videostab/wobble_suppression.hpp
+types/CMakeFiles/toyslam_types_library.dir/Map.cpp.o: /usr/local/include/opencv4/opencv2/viz.hpp
+types/CMakeFiles/toyslam_types_library.dir/Map.cpp.o: /usr/local/include/opencv4/opencv2/viz/types.hpp
+types/CMakeFiles/toyslam_types_library.dir/Map.cpp.o: /usr/local/include/opencv4/opencv2/viz/viz3d.hpp
+types/CMakeFiles/toyslam_types_library.dir/Map.cpp.o: /usr/local/include/opencv4/opencv2/viz/vizcore.hpp
+types/CMakeFiles/toyslam_types_library.dir/Map.cpp.o: /usr/local/include/opencv4/opencv2/viz/widgets.hpp
 
 types/CMakeFiles/toyslam_types_library.dir/parameter.cpp.o: ../types/parameter.cpp
 

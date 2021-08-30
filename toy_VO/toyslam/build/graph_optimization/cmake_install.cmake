@@ -1,4 +1,4 @@
-# Install script for directory: /home/donghoon/ToySLAM/toy_VO/toyslam/graph_optimization
+# Install script for directory: /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/graph_optimization
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)

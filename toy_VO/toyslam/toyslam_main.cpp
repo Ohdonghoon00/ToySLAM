@@ -72,12 +72,12 @@ int main(int argc, char **argv)
 
     // Keyframe Selection
     int KS_track_overlap_ratio= 65;
-    int KS_inliers_num = 200;
+    int KS_inliers_num = 300;
     double KS_yaw_difference = 100; // 0.055
     
     // Local BA 
-    int fix_keyframe_num = 5;
-    int active_keyframe_num = 5;
+    int fix_keyframe_num = 10;
+    int active_keyframe_num = 3;
 
     // show image delay
     bool show_image_one_by_one = false;
@@ -85,8 +85,8 @@ int main(int argc, char **argv)
     bool fast_slam = true;
     bool want_frame_num = false;
     int go_to_frame_num = 540;
-
-
+    int made_vertex_id = 0;
+    int loop_KF_threshold = 0;
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     
     double delay = cvRound(1000/30);  // real-time delay
@@ -103,7 +103,7 @@ int main(int argc, char **argv)
     int keyframe_num = 0;
     int loop_detect_frame_id = 0;
     bool loop_detect = false;
-
+    bool GoodLoopEdge = true;
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////    
     
@@ -125,16 +125,18 @@ int main(int argc, char **argv)
     std::vector<int> previous_track_point_for_triangulate_ID;
     std::vector<cv::Point3d> SolvePnP_tracking_map;
     std::vector<int> SolvePnP_tracking_map_ID;
-
+    std::vector<double> vec_scale;
+    
     // Storage Storage_frame;
     std::vector<cv::Mat> inlier_storage;    
     std::vector<Frame> frame_storage;
     std::vector<cv::Mat> GT_Storage;
     std::vector<cv::Mat> draw_campose;
     Map map_storage;
-
+    std::vector<cv::Point3d> inlier_map_storage;
     // posegraph
     std::vector<g2o::SE3Quat> vec_pose;
+    std::vector<int> optimized_map_id;
 
     // DBoW2
     // OrbVocabulary voc("small_voc.yml.gz");
@@ -178,9 +180,9 @@ int main(int argc, char **argv)
     = new g2o::OptimizationAlgorithmLevenberg(std::move(block_solver));
 
 
-    g2o::SparseOptimizer* optimizer = new SparseOptimizer;
-    optimizer->setAlgorithm(algorithm);
-    optimizer->setVerbose(true); 
+    // g2o::SparseOptimizer* optimizer = new SparseOptimizer;
+    // optimizer->setAlgorithm(algorithm);
+    // optimizer->setVerbose(true); 
     
     // sim3 create linear solver and block solver
 
@@ -304,13 +306,15 @@ std::cout << " map_point size after remove outlier : " <<  map_point.size() << e
                 cv::solvePnPRansac(map_point, current_image.pts, K, cv::noArray(), rot, tran, false, 100, SolvePnP_reprojection_error, 0.99, inliers );
                 inlier_storage.push_back(inliers);
 std::cout << keyframe_num <<"  keyframe inlier storage rate : " << 100 * inliers.rows / map_point.size() << endl;
+                
+
 
                 // remove_SolvePnP_oulier(map_point, current_image.pts, inliers);
 std::cout << " map_point size after remove solvepnp outlier : " <<  map_point.size() << endl;
                 
 
                 // ORB descriptor for loop detection
-                cv::Ptr<cv::ORB> orb = cv::ORB::create();
+                cv::Ptr<cv::ORB> orb = cv::ORB::create(4000);
                 cout << "Extracting ORB features..." << times << endl;
 
                 vector<cv::KeyPoint> keypoints;
@@ -321,7 +325,8 @@ std::cout << " map_point size after remove solvepnp outlier : " <<  map_point.si
                 features.push_back(vector<cv::Mat >());
                 changeStructure(descriptors, features.back());
 
-
+                map_storage.LoopDescriptor.insert(std::pair<int, cv::Mat>(keyframe_num, descriptors));
+                map_storage.LoopKeyPoint.insert(std::pair<int, std::vector<cv::KeyPoint>>(keyframe_num, keypoints));
                 db.add(features[0]);
 
                 
@@ -355,13 +360,37 @@ std::cout << "@@@@@@@@@@ First keyframe selection @@@@@@@" << endl << " keyframe
                     // std::map<int, cv::Point3d> xyz_;
                     map_storage.world_xyz.insert(std::pair<int, cv::Point3d>(i, map_point[i]));
                     // map_storage.world_xyz.push_back(xyz_);
-
+                    
                     // SolvePnP_tracking_map.push_back(map_point[i]);
                     // SolvePnP_tracking_map_ID.push_back(i);
                 }       
+                // MapToKF_ids
+                for(int i = 0; i < map_storage.keyframe[keyframe_num].pts_id.size(); i++)
+                {
+                    int id_ = map_storage.keyframe[keyframe_num].pts_id[i];
+                    map_storage.MapToKF_ids[id_].push_back(keyframe_num);
+                }
 
 std::cout << " Landmark's num : " << map_storage.world_xyz.size() << endl;
 std::cout << " same as landmark num :::: keyframe 2d point size : " << map_storage.keyframe[keyframe_num].pts.size() <<endl;
+
+                // intitialize pose graph vertex
+                g2o::VertexSim3Expmap* v_sim3 = new g2o::VertexSim3Expmap();
+                v_sim3->setId(0);
+                v_sim3->setMarginalized(false);
+                cv::Mat cam_pose4d = vec6d_to_homogenous_campose(map_storage.keyframe[0].cam_pose);
+                cam_pose4d = cam_pose4d.inv();
+                Eigen::Matrix3d sim3_r = RotationMatToEigen3d(homogenous_campose_to_R(cam_pose4d));
+                Eigen::Vector3d sim3_t(homogenous_campose_to_t(cam_pose4d).at<double>(0, 0),
+                                        homogenous_campose_to_t(cam_pose4d).at<double>(1, 0),
+                                        homogenous_campose_to_t(cam_pose4d).at<double>(2, 0));
+                g2o::Sim3 sim3(sim3_r, sim3_t, 1.0);
+                v_sim3->setEstimate(sim3);
+
+                
+                v_sim3->setFixed(true);
+                optimizer_sim3.addVertex(v_sim3);
+                        
 
                 // new feature to track
                 std::cout << " new feature " << endl;
@@ -423,11 +452,12 @@ std::cout << " same point :  " << same_point_num << " different point num  : " <
                     ceres::CostFunction* cost_func = ReprojectionError::create(map_storage.keyframe[0].pts[i], f, cv::Point2d(c.x, c.y));
                     double* camera = (double*)(&map_storage.keyframe[0].cam_pose);
                     double* X_ = (double*)(&(map_storage.world_xyz[i]));
-                    initilize_ba.AddResidualBlock(cost_func, new CauchyLoss(0.5), camera, X_); 
+                    initilize_ba.AddResidualBlock(cost_func, new CauchyLoss(0.2), camera, X_); 
                 }            
                             
                 // ceres option       
                 ceres::Solver::Options options;
+                // options.max_num_iterations = 50;
                 options.linear_solver_type = ceres::DENSE_SCHUR;
                 options.num_threads = 8;
                 options.minimizer_progress_to_stdout = true;
@@ -442,16 +472,16 @@ std::cout << " same point :  " << same_point_num << " different point num  : " <
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
                 // add vertex to posegraph
-                Eigen::Vector3d PoseGraphTranslation;
-                PoseGraphTranslation = PoseToEigen3d(map_storage, keyframe_num);
+                // Eigen::Vector3d PoseGraphTranslation;
+                // PoseGraphTranslation = PoseToEigen3d(map_storage, keyframe_num);
                 
-                // rotation matrix to quternion
-                Eigen::Matrix3d abcd = RotationMatToEigen3d(vec6d_to_homogenous_campose(map_storage.keyframe[keyframe_num].cam_pose));
-                Eigen::Quaterniond PoseGraphQuternion;
-                PoseGraphQuternion = getQuaternionFromRotationMatrix(abcd);
-                g2o::SE3Quat PG_Pose(PoseGraphQuternion, PoseGraphTranslation);
-                vec_pose.push_back(PG_Pose);
-                addPoseVertex(optimizer, PG_Pose, true);
+                // // rotation matrix to quternion
+                // Eigen::Matrix3d abcd = RotationMatToEigen3d(vec6d_to_homogenous_campose(map_storage.keyframe[keyframe_num].cam_pose));
+                // Eigen::Quaterniond PoseGraphQuternion;
+                // PoseGraphQuternion = getQuaternionFromRotationMatrix(abcd);
+                // g2o::SE3Quat PG_Pose(PoseGraphQuternion, PoseGraphTranslation);
+                // vec_pose.push_back(PG_Pose);
+                // addPoseVertex(optimizer, PG_Pose, true);
 
 
 
@@ -560,11 +590,14 @@ std::cout << " map point size for motion only BA : " << map_point_for_motion_BA.
                 ceres::CostFunction* motion_only_cost_func = motion_only_ReprojectionError::create(current_image_pts_for_motion_BA[i], map_point_for_motion_BA[i], f, cv::Point2d(c.x, c.y));
                 double* camera_ = (double*)(&current_image.cam_pose);
         
-                motion_only_ba.AddResidualBlock(motion_only_cost_func, new CauchyLoss(0.5), camera_); 
+                motion_only_ba.AddResidualBlock(motion_only_cost_func, new CauchyLoss(0.2), camera_); 
             }            
             
             // ceres option       
             ceres::Solver::Options options;
+            // options.max_num_iterations = 50;
+            // options.gradient_tolerance = 1e-9;
+            // options.function_tolerance = 1e-9;
             options.linear_solver_type = ceres::DENSE_SCHUR;
             options.num_threads = 8;
             options.minimizer_progress_to_stdout = false;
@@ -696,6 +729,7 @@ std::cout << map_point.size() << "      " << current_track_point_for_triangulate
                 cv::solvePnPRansac(map_point, current_track_point_for_triangulate, K, cv::noArray(), rot, tran, false, 100, SolvePnP_reprojection_error, 0.99, inliers_ );
                 inlier_storage.push_back(inliers_);
 std::cout << keyframe_num + 1 << " keyframe inlier storage rate : " << 100 * inliers_.rows / map_point.size() << endl;                
+                
 
 
 
@@ -723,7 +757,13 @@ std::cout << " current frame_storage size : " << frame_storage.size() << endl;
 cv::imshow(" keyframe image ", map_storage.keyframe[keyframe_num].frame);
 std::cout << "@@@@@@@@@ New keyframe was made @@@@@@@@@" << endl << " Keyframe num is  : " << keyframe_num << " Frame num is : " << times << endl;   
 
-
+                // MapToKF_ids
+                for(int i = 0; i < map_storage.keyframe[keyframe_num].pts_id.size(); i++)
+                {
+                    int id_ = map_storage.keyframe[keyframe_num].pts_id[i];
+                
+                    map_storage.MapToKF_ids[id_].push_back(keyframe_num);
+                }            
 
 
                 
@@ -772,6 +812,9 @@ std::cout << " fixed keyframe num  : " << j << endl;
                                 
                 // ceres option       
                 ceres::Solver::Options options;
+                // options.max_num_iterations = 50;
+                // options.gradient_tolerance = 1e-9;
+                // options.function_tolerance = 1e-9;
                 options.linear_solver_type = ceres::ITERATIVE_SCHUR;
                 options.num_threads = 8;
                 options.minimizer_progress_to_stdout = false;
@@ -788,62 +831,58 @@ std::cout << " fixed keyframe num  : " << j << endl;
                 std::cout << endl << " camera pose after keyframe BA " << endl;
                 for(int j = keyframe_num - active_keyframe_num + 1 - p1; j < keyframe_num + 1; j++) std::cout << " keyframe num : " << j << endl << vec6d_to_homogenous_campose(map_storage.keyframe[j].cam_pose) << endl;                
 
-                // visualize map point ( black dot )
-                // if(keyframe_num % 3 == 0)
-                // {
-                //     if ((keyframe_num - active_keyframe_num + 1 - fix_keyframe_num) >= 0)
-                //     {
-                //         int k = keyframe_num - active_keyframe_num + 1 - fix_keyframe_num - p2;
-                //         for ( int i = 0; i < inlier_storage[k].rows; i++)
-                //         {
-                //             int id_ = map_storage.keyframe[k].pts_id[inlier_storage[k].at<int>(i, 0)];
-                //             GLdouble X_map(map_storage.world_xyz[id_].x), Y_map(map_storage.world_xyz[id_].y), Z_map(map_storage.world_xyz[id_].z);
-                //             show_trajectory(X_map, Y_map, Z_map, 0.0, 0.0, 0.0, 0.01);              
-                //         }
-                //     }
-                // }
+
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-                // add vertex to posegraph
-                Eigen::Vector3d PoseGraphTranslation;
-                PoseGraphTranslation = PoseToEigen3d(map_storage, keyframe_num);
-                
-                
-                // rotation matrix to quternion
-                Eigen::Matrix3d abcd = RotationMatToEigen3d(vec6d_to_homogenous_campose(map_storage.keyframe[keyframe_num].cam_pose));
-                Eigen::Quaterniond PoseGraphQuternion;
-                PoseGraphQuternion = getQuaternionFromRotationMatrix(abcd);
-                
-                g2o::SE3Quat PG_Pose(PoseGraphQuternion, PoseGraphTranslation);
-                // std::cout << "PG_Pose" << std::endl << PG_Pose << std::endl;
-                // cv::waitKey();
-                vec_pose.push_back(PG_Pose);
-
-                addPoseVertex(optimizer, PG_Pose, false);
-                
-                // add edge to posegraph
-                g2o::SE3Quat relpose;
-                relpose = vec_pose[keyframe_num-1].inverse() * vec_pose[keyframe_num];
-                addEdgePosePose(optimizer, keyframe_num-1, keyframe_num, relpose);
-
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////                
   
-                cv::Ptr<cv::ORB> orb = cv::ORB::create();
+                cv::Ptr<cv::ORB> orb = cv::ORB::create(4000);
                 cout << "Extracting ORB features..." << times << endl;
 
                 vector<cv::KeyPoint> keypoints;
                 cv::Mat descriptors;
-                cv::Mat mask;
+                cv::Mat mask, inlier_mask;
                 features.clear();
                 orb->detectAndCompute(current_image.frame, mask, keypoints, descriptors);
                 features.push_back(vector<cv::Mat >());
                 changeStructure(descriptors, features.back());
+               
+                cv::Ptr<cv::DescriptorMatcher> matcher = cv::BFMatcher::create(cv::NORM_HAMMING);
+                std::vector<cv::DMatch> matches;               
+               
+                map_storage.LoopDescriptor.insert(std::pair<int, cv::Mat>(keyframe_num, descriptors));
+                map_storage.LoopKeyPoint.insert(std::pair<int, std::vector<cv::KeyPoint>>(keyframe_num, keypoints));
+                
+                // ORB LOOP MAP
+                // matcher->match(MapST.LoopDescriptor[keyframe_num - 1], MapST.LoopDescriptor[keyframe_num], matches);
+                // for(int i = 0; i < matches.size(); i++)
+                // {
+                //     map_storage.LoopPoint2f[keyframe_num - 1].push_back(MapST.LoopKeyPoint[keyframe_num - 1][matches[i].queryIdx].pt);
+                //     map_storage.LoopPoint2f[keyframe_num].push_back(MapST.LoopKeyPoint[keyframe_num][matches[i].trainIdx].pt);
+                // }
+                // cv::Mat E = cv::findEssentialMat(map_storage.LoopPoint2f[keyframe_num - 1], map_storage.LoopPoint2f[keyframe_num], f, c, cv::RANSAC, 0.99, 1, inlier_mask);
+                
+                // for(int i = 0; i < inlier_mask.rows; i++)
+                // {
+                
+                //     if(inlier_mask.at<bool>(i, 0) == 1)
+                //     {
+                //         LoopPoint_.push_back(LoopPoint[i]);
+                //         BeforeLoopPoint_.push_back(BeforeLoopPoint[i]);
+                //     }
+                // }
+                
+                // P0 = K_ * cam_storage_to_projection_matrix(map_storage.keyframe[loop_edge_id].cam_pose);
+                // P1 = K_ * cam_storage_to_projection_matrix(map_storage.keyframe[loop_edge_id - 1].cam_pose);     
+                // cv::triangulatePoints(P0, P1, LoopPoint_, BeforeLoopPoint_, X);
 
-                // Map ajsdfk.tri();
+                // world_xyz_point_to_homogenous(X);
+                // X.convertTo(X, CV_64F);
+                // map_point_.clear();
+                // for (int i = 0; i < LoopPoint_.size(); i++ ) map_point_.push_back(Point3d(X.at<double>(0, i), X.at<double>(1, i), X.at<double>(2, i)));
+
+                
+                 
 
                 QueryResults ret;
                 ret.clear();
@@ -868,98 +907,203 @@ cout << "Searching for Image " << keyframe_num << ". " << ret << endl;
                             index_correction++;
                         }
                     }   
-cout << "erase nearest keyframe "  << ". " << ret[0] << endl;
+std::cout << "High score keyframe  num : "  << ret[0].Id << "       Score : " << ret[0].Score << std::endl;
+                    
+                    // if(ret[0].Score > 0.45)
+                    // {
+                    //     loop_detect = true;
+                    //     loop_KF_threshold = 0;
+                    //     cv::waitKey();
+                    // }
+                    
+                    if(loop_KF_threshold > 10)
+                    { 
+                        if(ret[0].Score > 0.38) 
+                        {
+                            loop_detect = true;
+                            loop_KF_threshold = 0;
+                            // cv::waitKey();
+                        }
+                    }    
+                        loop_KF_threshold ++;
                         
-                    if(ret[0] > 0.2) loop_detect = true;
                     if(loop_detect)
-                    {
+                    {   
+
+
+
                         loop_detect_frame_id = ret[0].Id;
                         show_loop_detect_line(map_storage, loop_detect_frame_id, keyframe_num, 0.0f, 1.0f, 0.0f, 1.3);
 
-                        // find relative R,t between loop_detect_frame and current_frame
-                        std::vector<cv::Point2f> track_point_for_add_PG_edge;
-                        track_opticalflow_and_remove_err(map_storage.keyframe[loop_detect_frame_id].frame, current_image.frame, map_storage.keyframe[loop_detect_frame_id].pts, track_point_for_add_PG_edge);
-                        cv::Mat E, inlier_mask, R, t, Rt;
-                        E = cv::findEssentialMat(map_storage.keyframe[loop_detect_frame_id].pts, track_point_for_add_PG_edge, f, c, cv::RANSAC, 0.99, 1, inlier_mask);
-                        int inlier_num = cv::recoverPose(E, map_storage.keyframe[loop_detect_frame_id].pts, track_point_for_add_PG_edge, R, t, f, c, inlier_mask);
-                        
-                        
-                        Eigen::Vector3d loop_PoseGraphTranslation(t.at<double>(0, 0), t.at<double>(1, 0), t.at<double>(2, 0));
-                        std::cout << R << std::endl << t << std::endl;
-                        // rotation matrix to quternion
-                        Eigen::Matrix3d loop_abcd = RotationMatToEigen3d(R);
-                        Eigen::Quaterniond loop_PoseGraphQuternion;
-                        loop_PoseGraphQuternion = getQuaternionFromRotationMatrix(loop_abcd);
-                        
-                        g2o::SE3Quat loop_relpose(loop_PoseGraphQuternion, loop_PoseGraphTranslation);
-                        std::cout << loop_relpose <<std::endl;     
-                        addEdgePosePose(optimizer, loop_detect_frame_id, keyframe_num, loop_relpose);
-                        
-                        // convert to se3 to sim3
-                        for(int i = 0; i < vec_pose.size(); i++)
-                        {
-                            g2o::VertexSE3* v_se3 = static_cast<g2o::VertexSE3*>(optimizer->vertex(i));
-                            g2o::VertexSim3Expmap* v_sim3 = new g2o::VertexSim3Expmap();
-                            v_sim3->setId(i);
-                            v_sim3->setMarginalized(false);
-                            ToVertexSim3(*v_se3, v_sim3);
-                            v_sim3->setFixed(false);
-                            if (i == 0) v_sim3->setFixed(true);
-                            optimizer_sim3.addVertex(v_sim3);
 
+
+                        // add vertex to posegraph sim3
+                        for(int i = made_vertex_id; i < keyframe_num; i++)
+                        {
+                            // g2o::VertexSE3* v_se3 = static_cast<g2o::VertexSE3*>(optimizer->vertex(i));
+                            g2o::VertexSim3Expmap* v_sim3 = new g2o::VertexSim3Expmap();
+                            v_sim3->setId(i + 1);
+                            v_sim3->setMarginalized(false);
+                            cv::Mat cam_pose4d = vec6d_to_homogenous_campose(map_storage.keyframe[i + 1].cam_pose);
+                            cam_pose4d = cam_pose4d.inv();
+                            Eigen::Matrix3d sim3_r = RotationMatToEigen3d(homogenous_campose_to_R(cam_pose4d));
+                            Eigen::Vector3d sim3_t(homogenous_campose_to_t(cam_pose4d).at<double>(0, 0),
+                                                    homogenous_campose_to_t(cam_pose4d).at<double>(1, 0),
+                                                    homogenous_campose_to_t(cam_pose4d).at<double>(2, 0));
+                            g2o::Sim3 sim3(sim3_r, sim3_t, 1.0);
+                            v_sim3->setEstimate(sim3);
+
+                            v_sim3->setFixed(false);
                             
+                            optimizer_sim3.addVertex(v_sim3);
+                            // std::cout << " Add " << i + 1 << " vertex " << std::endl;
                         }
 
-
-                        // convert to edge se3 to sim3
-                        int edge_index = 0;
-                        for (auto& tmp : optimizer->edges()) 
-                        {
-                            g2o::EdgeSE3* e_se3 = static_cast<g2o::EdgeSE3*>(tmp);
-                            int idx0 = e_se3->vertex(0)->id();
-                            int idx1 = e_se3->vertex(1)->id();
-                            g2o::EdgeSim3* e_sim3 = new g2o::EdgeSim3();
                             
-                            ToEdgeSim3(*e_se3, e_sim3);
-                            e_sim3->setId(edge_index++);
-                            e_sim3->setVertex(0, optimizer_sim3.vertices()[idx0]);
-                            e_sim3->setVertex(1, optimizer_sim3.vertices()[idx1]);
-                            e_sim3->information() = Eigen::Matrix<double, 7, 7>::Identity();
+                        // add edge to posegraph sim3
+                        int edge_index = 0;
+                        for(int j = 0; j < 2; j++)
+                        {
+                            for (int i = made_vertex_id; i < keyframe_num; i++)
+                            {    
+                                // g2o::SE3Quat relpose;
+                                int idx0 = i - j;
+                                int idx1 = i + 1;
+                                if(idx0 < 0) continue;
+                                cv::Mat relpose = vec6d_to_homogenous_campose(map_storage.keyframe[idx0].cam_pose).inv() * vec6d_to_homogenous_campose(map_storage.keyframe[idx1].cam_pose);
+                                relpose = relpose.inv();
+                                Eigen::Matrix3d sim3_r;
+                                sim3_r <<   relpose.at<double>(0, 0), relpose.at<double>(0, 1), relpose.at<double>(0, 2),
+                                            relpose.at<double>(1, 0), relpose.at<double>(1, 1), relpose.at<double>(1, 2),
+                                            relpose.at<double>(2, 0), relpose.at<double>(2, 1), relpose.at<double>(2, 2);
+                                Eigen::Vector3d sim3_t(relpose.at<double>(0, 3), relpose.at<double>(1, 3), relpose.at<double>(2, 3));
+                                                    
+                                
+                                g2o::EdgeSim3* e_sim3 = new g2o::EdgeSim3();
+                                g2o::Sim3 sim3(sim3_r, sim3_t, 1.0);
+                                e_sim3->setMeasurement(sim3);
+                               
+                                // addEdgePosePose(optimizer, i , i + 1, relpose);
+                                
+                                e_sim3->setId(edge_index++);
+                                e_sim3->setVertex(0, optimizer_sim3.vertices()[idx0]);
+                                e_sim3->setVertex(1, optimizer_sim3.vertices()[idx1]);
+                                e_sim3->information() = Eigen::Matrix<double, 7, 7>::Identity();
+                                // std::cout << "id0 : " << idx0 << "      " << "id1 : " << idx1 << std::endl;
 
+                                optimizer_sim3.addEdge(e_sim3);
+                                // std::cout << idx0 << "  edge  " << idx1 << std::endl;
+                            }
+                        }
+                        // std::cout << " Add " << keyframe_num - made_vertex_id << " edge " << std::endl;
+                        made_vertex_id = keyframe_num;
+                        // std::cout << " edge index : " << edge_index << std::endl;
 
-                            g2o::Sim3 sim3=e_sim3->measurement();
-                            Eigen::Matrix3d r = sim3.rotation().toRotationMatrix();
-                            Eigen::Vector3d t = sim3.translation();
-                            // cout<<"idx0: "<<idx0<<"idx1: "<<idx1<<"\n";
-                            // cout<<edge_index<<"\n";
-                            // cout<<t<<"\n";
-
-
-                            optimizer_sim3.addEdge(e_sim3);
-                        }                      
-                        // for(int i = 0; i < vec_pose.size(); i++)
-                        // {
-                        //     g2o::VertexSE3* v_se3 = static_cast<g2o::VertexSE3*>(optimizer->vertex(i));
-                        //     g2o::VertexSim3Expmap* v_sim3 = new g2o::VertexSim3Expmap::VertexSim3Expmap();
-                        //     ToVertexSim3(*v_se3, v_sim3);
-                        //     optimizer_sim3.addVertex(v_sim3);
-                        // }
-         
-                        optimizer_sim3.initializeOptimization();
-                        optimizer_sim3.optimize(100);
+                        cv::Mat relpose_, t;
+                        double scale = VerifyLoop(loop_detect_frame_id, keyframe_num, map_storage, K, relpose_);
                         
-                        std::cout << "vec_pose.size()" << vec_pose.size() << std::endl;
-                        for(int i = 0; i < vec_pose.size(); i++)
+                        // cv::waitKey();
+                        // double scale = FindLoopEdgeScale(loop_detect_frame_id, keyframe_num, map_storage, K, inlier_storage, relpose_);                            
+                        if(scale == 1.0 or scale < 0.3 or scale >2.0)
+                        {
+                            loop_KF_threshold = 11;
+                            GoodLoopEdge = false;
+                        }
+                        if(GoodLoopEdge)
+                        {
+                            Eigen::Matrix3d loop_sim3_r;
+                            loop_sim3_r <<   relpose_.at<double>(0, 0), relpose_.at<double>(0, 1), relpose_.at<double>(0, 2),
+                                                relpose_.at<double>(1, 0), relpose_.at<double>(1, 1), relpose_.at<double>(1, 2),
+                                                relpose_.at<double>(2, 0), relpose_.at<double>(2, 1), relpose_.at<double>(2, 2);
+                            Eigen::Vector3d loop_sim3_t(relpose_.at<double>(0, 3), relpose_.at<double>(1, 3), relpose_.at<double>(2, 3));
+                                // add loop adge
+                                int idx0 = keyframe_num;
+                                int idx1 = loop_detect_frame_id;
+                                // cv::Mat relpose = vec6d_to_homogenous_campose(map_storage.keyframe[idx0].cam_pose).inverse() * vec6d_to_homogenous_campose(map_storage.keyframe[idx1].cam_pose);
+                                    
+                                // Eigen::Matrix3d sim3_r <<   relpose.at<double>(0, 0), relpose.at<double>(0, 1), relpose.at<double>(0, 2),
+                                //                                 relpose.at<double>(1, 0), relpose.at<double>(1, 1), relpose.at<double>(1, 2),
+                                //                                 relpose.at<double>(2, 0), relpose.at<double>(2, 1), relpose.at<double>(2, 2);
+                                //     Eigen::Vector3d sim3_t(relpose.at<double>(0, 3), relpose.at<double>(1, 3), relpose.at<double>(2, 3));
+                                                        
+                                    
+                                    g2o::EdgeSim3* e_sim3 = new g2o::EdgeSim3();
+                                    // Eigen::Matrix3d loop_sim3_r = Eigen::Matrix<double, 3, 3>::Identity();
+                                    // Eigen::Vector3d loop_sim3_t(0, 0, 0);
+                                    g2o::Sim3 sim3(loop_sim3_r, loop_sim3_t, scale);
+                                    e_sim3->setMeasurement(sim3);
+                                
+                                    // addEdgePosePose(optimizer, i , i + 1, relpose);
+                                    
+                                    e_sim3->setId(edge_index++);
+                                    e_sim3->setVertex(0, optimizer_sim3.vertices()[idx0]);
+                                    e_sim3->setVertex(1, optimizer_sim3.vertices()[idx1]);
+                                    e_sim3->information() = Eigen::Matrix<double, 7, 7>::Identity();
+                                    // std::cout << "!!! add loop edge !!!  id0 : " << idx0 << "      " << "id1 : " << idx1 << std::endl;
+
+                                    optimizer_sim3.addEdge(e_sim3);
+                                
+                            // }
+                            
+                            std::cout << " edge num : " << optimizer_sim3.edges().size() << std::endl;
+                            // cv::waitKey();
+                        }
+                        
+                        GoodLoopEdge = true;
+
+                        std::cout << " Start optimize PGO " << std::endl;
+                        bool initialize_bool = optimizer_sim3.initializeOptimization();
+                        std::cout << initialize_bool << std::endl;
+                        optimizer_sim3.optimize(100);
+                        std::cout << " End optimize PGO " << std::endl;
+
+                        // Recover Landmark
+                        for(auto tmp : map_storage.world_xyz)
+                        {
+                            int iter = map_storage.MapToKF_ids[tmp.first].size() - 1; 
+                            int KFid = map_storage.MapToKF_ids[tmp.first][0];
+                            Eigen::Vector4d old_map;
+                            old_map << tmp.second.x, tmp.second.y, tmp.second.z, 1;
+                            cv::Mat MMatrix_ = vec6d_to_homogenous_campose(map_storage.keyframe[KFid].cam_pose);
+                            MMatrix_ = MMatrix_.inv();
+                            Eigen::Matrix4d old_PMatrix = Mat44dToEigen44d(MMatrix_);
+
+                            g2o::VertexSim3Expmap* vtx = static_cast<g2o::VertexSim3Expmap*>(optimizer_sim3.vertex(KFid));
+                            g2o::Sim3 sim3 = vtx->estimate();
+                            Eigen::Matrix3d r_ = sim3.rotation().toRotationMatrix();
+                            Eigen::Vector3d t_ = sim3.translation();
+                            double s = sim3.scale();
+                            t_ *= (1./s);
+                            
+                            Eigen::Matrix4d new_MMatrix = RtToEigen44Md(r_, t_);
+
+                            Eigen::Vector4d new_map = new_MMatrix.inverse() * old_PMatrix * old_map;
+                            // tmp.second.x = new_map[0];
+                            // tmp.second.y = new_map[1];
+                            // tmp.second.z = new_map[2];
+
+                            map_storage.world_xyz[tmp.first].x = new_map[0];
+                            map_storage.world_xyz[tmp.first].y = new_map[1];
+                            map_storage.world_xyz[tmp.first].z = new_map[2];
+                        }
+                        
+                        
+                        for(int i = 0; i < keyframe_num + 1; i++)
                         {
                             g2o::VertexSim3Expmap* vtx = static_cast<g2o::VertexSim3Expmap*>(optimizer_sim3.vertex(i));
                             g2o::Sim3 sim3 = vtx->estimate();
 
-                            
+                            double s = sim3.scale();
+                            vec_scale.push_back(s);
+                            // std::cout << i << " Scale : " << s << std::endl;
                             // g2o::VertexSE3* vtx = static_cast<g2o::VertexSE3*>(optimizer->vertex(i));
                             // g2o::Isometry3 se3 = vtx->estimate();
                             // // std::cout << "se3" << se3 << std::endl;
                             Eigen::Matrix3d r_ = sim3.rotation().toRotationMatrix();
                             Eigen::Vector3d t_ = sim3.translation();
+                            t_ *= (1./s);
+                            // r_ = r_.transposec;
+                            // Eigen::Vector3d t_traj = -r_ * t_;
                             cv::Mat rot = Eigen3dToRotationMat(r_);
                             cv::Rodrigues(rot, rot);
                             map_storage.keyframe[i].cam_pose[0] = rot.at<double>(0, 0);
@@ -971,32 +1115,37 @@ cout << "erase nearest keyframe "  << ". " << ret[0] << endl;
                             // std::cout << "rot" << std::endl << rot << std::endl;
                             // std::cout << "t_" << std::endl << t_ << std::endl;
                         }
+                            std::cout << " Scale : " << scale << std::endl;
+                            std::cout << "relpose" << std::endl << relpose_.inv() << std::endl;
+                            vec_pose.clear();
+                            // cv::waitKey();
                         
-                        // std::cout << "vec_pose.size()" << vec_pose.size() << std::endl;
-                        // for(int i = 0; i < vec_pose.size(); i++)
-                        // {
-                        //     g2o::VertexSim3Expmap* vtx = static_cast<g2o::VertexSim3Expmap*>(optimizer->vertex(i));
-                        //     g2o::Sim3 sim3 = vtx->estimate();
-                        //     // std::cout << "se3" << se3 << std::endl;
-                        //     Eigen::Matrix3d r_ = sim3.rotation().toRotationMatrix();
-                        //     Eigen::Vector3d t_ = sim3.translation();
-                        //     cv::Mat rot = Eigen3dToRotationMat(r_);
-                        //     cv::Rodrigues(rot, rot);
-                        //     map_storage.keyframe[i].cam_pose[0] = rot.at<double>(0, 0);
-                        //     map_storage.keyframe[i].cam_pose[1] = rot.at<double>(1, 0);
-                        //     map_storage.keyframe[i].cam_pose[2] = rot.at<double>(2, 0);
-                        //     map_storage.keyframe[i].cam_pose[3] = t_[0];
-                        //     map_storage.keyframe[i].cam_pose[4] = t_[1];
-                        //     map_storage.keyframe[i].cam_pose[5] = t_[2];
-                        //     std::cout << "rot" << std::endl << rot << std::endl;
-                        //     std::cout << "t_" << std::endl << t_ << std::endl;
-                        // }                        
+                  
 
-                            
-                            cv::waitKey();
-                        // loop_detect = false;
+                        
+                        ceres::Problem global_BA; 
+                        for(int j = 0; j < keyframe_num + 1; j++)
+                        {
+                            for ( int i = 0; i < inlier_storage[j].rows; i++)
+                            {
+                                ceres::CostFunction* map_only_cost_func = map_point_only_ReprojectionError::create(map_storage.keyframe[j].pts[inlier_storage[j].at<int>(i, 0)], map_storage.keyframe[j].cam_pose, f, cv::Point2d(c.x, c.y));
+                                int id_ = map_storage.keyframe[j].pts_id[inlier_storage[j].at<int>(i, 0)];
+                                double* X_ = (double*)(&(map_storage.world_xyz[id_]));
+                                global_BA.AddResidualBlock(map_only_cost_func, NULL, X_); 
+                                        
+                            } 
+                        }
+                        ceres::Solver::Options options;
+                        options.linear_solver_type = ceres::ITERATIVE_SCHUR;
+                        options.num_threads = 8;
+                        options.minimizer_progress_to_stdout = false;
+                        ceres::Solver::Summary summary;
+                        std::cout << " Start optimize map point " << std::endl;
+                        ceres::Solve(options, &global_BA, &summary);                
+                        std::cout << " End optimize map point " << std::endl;
                     }    
                 }
+                vec_scale.clear();
                 db.add(features[0]);
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////                
@@ -1168,33 +1317,51 @@ std::cout << " same point :  " << same_point_num << " different point num  : " <
 std::cout << " map_storage size is : " << map_storage.world_xyz.size() << endl;      
         }
 
-        
+        // storage inlier map point 
         if (new_keyframe_selection)
-        {   
-            if(keyframe_num % 3 == 0)
+        { 
+            inlier_map_storage.clear();
+            for(int j = 0; j < keyframe_num + 1; j ++)
             {
-            for( int i = 0 ; i < map_storage.world_xyz.size(); i++)
-            // {
-                // for (std::map<int, cv::Point3d>::iterator itr = map_storage.world_xyz.begin(); itr != map_storage.world_xyz.end(); ++itr) 
+                for(int i = 0; i < inlier_storage[j].rows; i++)
                 {
-                //    itr->second
-                    // for ( int k = 0; i < inlier_storage[i].rows; k++)
-                    // {
-                        // int show_map_id = map_storage.world_xyz[i];
-                        GLdouble X_map(map_storage.world_xyz[i].x), Y_map(map_storage.world_xyz[i].y), Z_map(map_storage.world_xyz[i].z);
-                        show_trajectory(X_map, Y_map, Z_map, 0.0, 0.0, 0.0, 0.01);              
-                    // }          
-                
-                    // int show_map_id = map_storage.keyframe[keyframe_num].pts_id[i];
-                    // GLdouble X_map(map_storage.world_xyz[show_map_id].x), Y_map(map_storage.world_xyz[show_map_id].y), Z_map(map_storage.world_xyz[show_map_id].z);
-                    // show_trajectory(X_map, Y_map, Z_map, 0.0, 0.0, 0.0, 0.01);
+                    int id_ = map_storage.keyframe[j].pts_id[inlier_storage[j].at<int>(i, 0)];
+                    inlier_map_storage.push_back(map_storage.world_xyz[id_]);
                 }
-            // }
-            }         
-            new_keyframe_selection = false;
-            show_map_point_parms = map_storage.world_xyz.size();
-std::cout << " map_storage size is : " << map_storage.world_xyz.size() << endl;
+            }
+            
+            for(int i = 0 ; i < inlier_map_storage.size(); i++)
+            {
+                GLdouble X_map(inlier_map_storage[i].x), Y_map(inlier_map_storage[i].y), Z_map(inlier_map_storage[i].z);
+                show_trajectory(X_map, Y_map, Z_map, 0.0, 0.0, 0.0, 0.01);            
+            }
+            
         }
+//         if (new_keyframe_selection)
+//         {   
+//             if(keyframe_num)
+//             {
+//             for( int i = 0 ; i < map_storage.world_xyz.size(); i++)
+//             // {
+//                 // for (std::map<int, cv::Point3d>::iterator itr = map_storage.world_xyz.begin(); itr != map_storage.world_xyz.end(); ++itr) 
+//                 {
+//                 //    itr->second
+//                     // for ( int k = 0; i < inlier_storage[i].rows; k++)
+//                     // {
+//                         // int show_map_id = map_storage.world_xyz[i];
+//                         GLdouble X_map(map_storage.world_xyz[i].x), Y_map(map_storage.world_xyz[i].y), Z_map(map_storage.world_xyz[i].z);
+//                         show_trajectory(X_map, Y_map, Z_map, 0.0, 0.0, 0.0, 0.01);              
+//                     // }          
+                
+//                     // int show_map_id = map_storage.keyframe[keyframe_num].pts_id[i];
+//                     // GLdouble X_map(map_storage.world_xyz[show_map_id].x), Y_map(map_storage.world_xyz[show_map_id].y), Z_map(map_storage.world_xyz[show_map_id].z);
+//                     // show_trajectory(X_map, Y_map, Z_map, 0.0, 0.0, 0.0, 0.01);
+//                 }
+//             // }
+//             }         
+//             show_map_point_parms = map_storage.world_xyz.size();
+// std::cout << " map_storage size is : " << map_storage.world_xyz.size() << endl;
+//         }
 //         if (new_keyframe_selection)
 //         {   
 //             // for( int i = 0 ; i < map_storage.world_xyz.size(); i++)
@@ -1217,10 +1384,13 @@ std::cout << " map_storage size is : " << map_storage.world_xyz.size() << endl;
         glFlush();
 
         // glClearColor(1.0,1.0,1.0, 1.0);
+        if (new_keyframe_selection) new_keyframe_selection = false;
+     
         
         if(loop_detect)
         {
-            cv::waitKey();
+            // cv::waitKey();
+ 
             loop_detect = false;
         }
 

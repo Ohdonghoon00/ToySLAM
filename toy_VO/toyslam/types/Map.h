@@ -11,7 +11,12 @@ class Map
     public:
         std::map< int, Frame > keyframe;
         std::map< int, cv::Point3d> world_xyz;
-
+        std::map< int, std::vector<int> > MapToKF_ids;
+        
+        std::map< int, std::vector<cv::KeyPoint> > LoopKeyPoint;
+        // std::map< int, std::vector<cv::Point2f> > LoopPoint2f;
+        std::map< int, cv::Mat> LoopDescriptor;
+        // std::map< int, cv::Point3d> LoopMap;
 
         Map()
         {}
@@ -28,6 +33,17 @@ class Map
         {
             keyframe = tc.keyframe;
             world_xyz = tc.world_xyz;
-
+            MapToKF_ids = tc.MapToKF_ids;
+            LoopKeyPoint = tc.LoopKeyPoint;
+            // LoopPoint2f = tc.LoopPoint2f;
+            LoopDescriptor = tc.LoopDescriptor;
         }
+
+        // void MakeLoopMap(int BeforeNum, int CurrNum, Map MapInfo)
+        // {
+        //     cv::Ptr<cv::ORB> orb = cv::ORB::create(4000);
+        //     std::vector<cv::KeyPoint> keypoints;
+        //     cv::Mat descriptors;
+        //     cv::Mat mask;
+        // }
 };

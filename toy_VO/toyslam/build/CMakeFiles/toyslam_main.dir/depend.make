@@ -336,6 +336,11 @@ CMakeFiles/toyslam_main.dir/math.cpp.o: /usr/local/include/opencv4/opencv2/video
 CMakeFiles/toyslam_main.dir/math.cpp.o: /usr/local/include/opencv4/opencv2/videostab/ring_buffer.hpp
 CMakeFiles/toyslam_main.dir/math.cpp.o: /usr/local/include/opencv4/opencv2/videostab/stabilizer.hpp
 CMakeFiles/toyslam_main.dir/math.cpp.o: /usr/local/include/opencv4/opencv2/videostab/wobble_suppression.hpp
+CMakeFiles/toyslam_main.dir/math.cpp.o: /usr/local/include/opencv4/opencv2/viz.hpp
+CMakeFiles/toyslam_main.dir/math.cpp.o: /usr/local/include/opencv4/opencv2/viz/types.hpp
+CMakeFiles/toyslam_main.dir/math.cpp.o: /usr/local/include/opencv4/opencv2/viz/viz3d.hpp
+CMakeFiles/toyslam_main.dir/math.cpp.o: /usr/local/include/opencv4/opencv2/viz/vizcore.hpp
+CMakeFiles/toyslam_main.dir/math.cpp.o: /usr/local/include/opencv4/opencv2/viz/widgets.hpp
 
 CMakeFiles/toyslam_main.dir/toyslam_main.cpp.o: ../graph_optimization/DBoW2/include/DBoW2/BowVector.h
 CMakeFiles/toyslam_main.dir/toyslam_main.cpp.o: ../graph_optimization/DBoW2/include/DBoW2/DBoW2.h
@@ -898,4 +903,9 @@ CMakeFiles/toyslam_main.dir/toyslam_main.cpp.o: /usr/local/include/opencv4/openc
 CMakeFiles/toyslam_main.dir/toyslam_main.cpp.o: /usr/local/include/opencv4/opencv2/videostab/ring_buffer.hpp
 CMakeFiles/toyslam_main.dir/toyslam_main.cpp.o: /usr/local/include/opencv4/opencv2/videostab/stabilizer.hpp
 CMakeFiles/toyslam_main.dir/toyslam_main.cpp.o: /usr/local/include/opencv4/opencv2/videostab/wobble_suppression.hpp
+CMakeFiles/toyslam_main.dir/toyslam_main.cpp.o: /usr/local/include/opencv4/opencv2/viz.hpp
+CMakeFiles/toyslam_main.dir/toyslam_main.cpp.o: /usr/local/include/opencv4/opencv2/viz/types.hpp
+CMakeFiles/toyslam_main.dir/toyslam_main.cpp.o: /usr/local/include/opencv4/opencv2/viz/viz3d.hpp
+CMakeFiles/toyslam_main.dir/toyslam_main.cpp.o: /usr/local/include/opencv4/opencv2/viz/vizcore.hpp
+CMakeFiles/toyslam_main.dir/toyslam_main.cpp.o: /usr/local/include/opencv4/opencv2/viz/widgets.hpp
 

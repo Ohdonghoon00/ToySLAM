@@ -1,4 +1,4 @@
-# Install script for directory: /home/donghoon/ToySLAM/toy_VO/toyslam/bundleAdjustment
+# Install script for directory: /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/bundleAdjustment
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)

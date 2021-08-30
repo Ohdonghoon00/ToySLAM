@@ -59,7 +59,8 @@
         "cinttypes": "cpp",
         "typeinfo": "cpp",
         "unordered_set": "cpp",
-        "typeindex": "cpp"
+        "typeindex": "cpp",
+        "random": "cpp"
     },
     "C_Cpp.errorSquiggles": "Disabled"
 }

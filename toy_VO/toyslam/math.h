@@ -28,6 +28,10 @@ cv::Vec6d homogenous_campose_to_vec6d(cv::Mat cam);
 
 cv::Mat vec6d_to_homogenous_campose(cv::Vec6d Rt_cam);
 
+Eigen::Matrix4d Mat44dToEigen44d(cv::Mat a);
+
+Eigen::Matrix4d RtToEigen44Md(Eigen::Matrix3d a, Eigen::Vector3d b);
+
 
 cv::Mat cam_storage_to_projection_matrix(cv::Vec6d cam_storage);
 
@@ -42,6 +46,8 @@ void track_opticalflow_and_remove_err_for_triangulate_(cv::Mat &previous_, cv::M
 
 
 void track_opticalflow_and_remove_err_for_SolvePnP(cv::Mat &previous_, cv::Mat &current_, std::vector<cv::Point2f> &previous_pts_, std::vector<cv::Point2f> &current_pts_, std::vector<int> &previous_pts_id_, std::vector<cv::Point3d> &map_point_);
+
+void track_opticalflow_and_remove_err_for_SolvePnP_noid(cv::Mat &previous_, cv::Mat &current_, std::vector<cv::Point2f> &previous_pts_, std::vector<cv::Point2f> &current_pts_, std::vector<cv::Point3d> &map_point_);
 
 
 void remove_map_point_and_2dpoint_outlier (std::vector<cv::Point3d> &map_point_, std::vector<cv::Point2f> &current_pts_, cv::Mat &current_cam_pose_);

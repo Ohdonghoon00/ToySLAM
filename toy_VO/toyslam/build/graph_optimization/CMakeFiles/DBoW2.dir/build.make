@@ -43,10 +43,10 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/donghoon/ToySLAM/toy_VO/toyslam
+CMAKE_SOURCE_DIR = /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/donghoon/ToySLAM/toy_VO/toyslam/build
+CMAKE_BINARY_DIR = /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/build
 
 # Include any dependencies generated for this target.
 include graph_optimization/CMakeFiles/DBoW2.dir/depend.make
@@ -59,16 +59,16 @@ include graph_optimization/CMakeFiles/DBoW2.dir/flags.make
 
 graph_optimization/CMakeFiles/DBoW2.dir/DBoW2/src/BowVector.cpp.o: graph_optimization/CMakeFiles/DBoW2.dir/flags.make
 graph_optimization/CMakeFiles/DBoW2.dir/DBoW2/src/BowVector.cpp.o: ../graph_optimization/DBoW2/src/BowVector.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/donghoon/ToySLAM/toy_VO/toyslam/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object graph_optimization/CMakeFiles/DBoW2.dir/DBoW2/src/BowVector.cpp.o"
-	cd /home/donghoon/ToySLAM/toy_VO/toyslam/build/graph_optimization && /usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/DBoW2.dir/DBoW2/src/BowVector.cpp.o -c /home/donghoon/ToySLAM/toy_VO/toyslam/graph_optimization/DBoW2/src/BowVector.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object graph_optimization/CMakeFiles/DBoW2.dir/DBoW2/src/BowVector.cpp.o"
+	cd /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/build/graph_optimization && /usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/DBoW2.dir/DBoW2/src/BowVector.cpp.o -c /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/graph_optimization/DBoW2/src/BowVector.cpp
 
 graph_optimization/CMakeFiles/DBoW2.dir/DBoW2/src/BowVector.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/DBoW2.dir/DBoW2/src/BowVector.cpp.i"
-	cd /home/donghoon/ToySLAM/toy_VO/toyslam/build/graph_optimization && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/donghoon/ToySLAM/toy_VO/toyslam/graph_optimization/DBoW2/src/BowVector.cpp > CMakeFiles/DBoW2.dir/DBoW2/src/BowVector.cpp.i
+	cd /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/build/graph_optimization && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/graph_optimization/DBoW2/src/BowVector.cpp > CMakeFiles/DBoW2.dir/DBoW2/src/BowVector.cpp.i
 
 graph_optimization/CMakeFiles/DBoW2.dir/DBoW2/src/BowVector.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/DBoW2.dir/DBoW2/src/BowVector.cpp.s"
-	cd /home/donghoon/ToySLAM/toy_VO/toyslam/build/graph_optimization && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/donghoon/ToySLAM/toy_VO/toyslam/graph_optimization/DBoW2/src/BowVector.cpp -o CMakeFiles/DBoW2.dir/DBoW2/src/BowVector.cpp.s
+	cd /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/build/graph_optimization && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/graph_optimization/DBoW2/src/BowVector.cpp -o CMakeFiles/DBoW2.dir/DBoW2/src/BowVector.cpp.s
 
 graph_optimization/CMakeFiles/DBoW2.dir/DBoW2/src/BowVector.cpp.o.requires:
 
@@ -83,16 +83,16 @@ graph_optimization/CMakeFiles/DBoW2.dir/DBoW2/src/BowVector.cpp.o.provides.build
 
 graph_optimization/CMakeFiles/DBoW2.dir/DBoW2/src/FBrief.cpp.o: graph_optimization/CMakeFiles/DBoW2.dir/flags.make
 graph_optimization/CMakeFiles/DBoW2.dir/DBoW2/src/FBrief.cpp.o: ../graph_optimization/DBoW2/src/FBrief.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/donghoon/ToySLAM/toy_VO/toyslam/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object graph_optimization/CMakeFiles/DBoW2.dir/DBoW2/src/FBrief.cpp.o"
-	cd /home/donghoon/ToySLAM/toy_VO/toyslam/build/graph_optimization && /usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/DBoW2.dir/DBoW2/src/FBrief.cpp.o -c /home/donghoon/ToySLAM/toy_VO/toyslam/graph_optimization/DBoW2/src/FBrief.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object graph_optimization/CMakeFiles/DBoW2.dir/DBoW2/src/FBrief.cpp.o"
+	cd /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/build/graph_optimization && /usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/DBoW2.dir/DBoW2/src/FBrief.cpp.o -c /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/graph_optimization/DBoW2/src/FBrief.cpp
 
 graph_optimization/CMakeFiles/DBoW2.dir/DBoW2/src/FBrief.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/DBoW2.dir/DBoW2/src/FBrief.cpp.i"
-	cd /home/donghoon/ToySLAM/toy_VO/toyslam/build/graph_optimization && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/donghoon/ToySLAM/toy_VO/toyslam/graph_optimization/DBoW2/src/FBrief.cpp > CMakeFiles/DBoW2.dir/DBoW2/src/FBrief.cpp.i
+	cd /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/build/graph_optimization && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/graph_optimization/DBoW2/src/FBrief.cpp > CMakeFiles/DBoW2.dir/DBoW2/src/FBrief.cpp.i
 
 graph_optimization/CMakeFiles/DBoW2.dir/DBoW2/src/FBrief.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/DBoW2.dir/DBoW2/src/FBrief.cpp.s"
-	cd /home/donghoon/ToySLAM/toy_VO/toyslam/build/graph_optimization && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/donghoon/ToySLAM/toy_VO/toyslam/graph_optimization/DBoW2/src/FBrief.cpp -o CMakeFiles/DBoW2.dir/DBoW2/src/FBrief.cpp.s
+	cd /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/build/graph_optimization && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/graph_optimization/DBoW2/src/FBrief.cpp -o CMakeFiles/DBoW2.dir/DBoW2/src/FBrief.cpp.s
 
 graph_optimization/CMakeFiles/DBoW2.dir/DBoW2/src/FBrief.cpp.o.requires:
 
@@ -107,16 +107,16 @@ graph_optimization/CMakeFiles/DBoW2.dir/DBoW2/src/FBrief.cpp.o.provides.build: g
 
 graph_optimization/CMakeFiles/DBoW2.dir/DBoW2/src/FORB.cpp.o: graph_optimization/CMakeFiles/DBoW2.dir/flags.make
 graph_optimization/CMakeFiles/DBoW2.dir/DBoW2/src/FORB.cpp.o: ../graph_optimization/DBoW2/src/FORB.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/donghoon/ToySLAM/toy_VO/toyslam/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object graph_optimization/CMakeFiles/DBoW2.dir/DBoW2/src/FORB.cpp.o"
-	cd /home/donghoon/ToySLAM/toy_VO/toyslam/build/graph_optimization && /usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/DBoW2.dir/DBoW2/src/FORB.cpp.o -c /home/donghoon/ToySLAM/toy_VO/toyslam/graph_optimization/DBoW2/src/FORB.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object graph_optimization/CMakeFiles/DBoW2.dir/DBoW2/src/FORB.cpp.o"
+	cd /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/build/graph_optimization && /usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/DBoW2.dir/DBoW2/src/FORB.cpp.o -c /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/graph_optimization/DBoW2/src/FORB.cpp
 
 graph_optimization/CMakeFiles/DBoW2.dir/DBoW2/src/FORB.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/DBoW2.dir/DBoW2/src/FORB.cpp.i"
-	cd /home/donghoon/ToySLAM/toy_VO/toyslam/build/graph_optimization && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/donghoon/ToySLAM/toy_VO/toyslam/graph_optimization/DBoW2/src/FORB.cpp > CMakeFiles/DBoW2.dir/DBoW2/src/FORB.cpp.i
+	cd /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/build/graph_optimization && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/graph_optimization/DBoW2/src/FORB.cpp > CMakeFiles/DBoW2.dir/DBoW2/src/FORB.cpp.i
 
 graph_optimization/CMakeFiles/DBoW2.dir/DBoW2/src/FORB.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/DBoW2.dir/DBoW2/src/FORB.cpp.s"
-	cd /home/donghoon/ToySLAM/toy_VO/toyslam/build/graph_optimization && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/donghoon/ToySLAM/toy_VO/toyslam/graph_optimization/DBoW2/src/FORB.cpp -o CMakeFiles/DBoW2.dir/DBoW2/src/FORB.cpp.s
+	cd /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/build/graph_optimization && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/graph_optimization/DBoW2/src/FORB.cpp -o CMakeFiles/DBoW2.dir/DBoW2/src/FORB.cpp.s
 
 graph_optimization/CMakeFiles/DBoW2.dir/DBoW2/src/FORB.cpp.o.requires:
 
@@ -131,16 +131,16 @@ graph_optimization/CMakeFiles/DBoW2.dir/DBoW2/src/FORB.cpp.o.provides.build: gra
 
 graph_optimization/CMakeFiles/DBoW2.dir/DBoW2/src/FeatureVector.cpp.o: graph_optimization/CMakeFiles/DBoW2.dir/flags.make
 graph_optimization/CMakeFiles/DBoW2.dir/DBoW2/src/FeatureVector.cpp.o: ../graph_optimization/DBoW2/src/FeatureVector.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/donghoon/ToySLAM/toy_VO/toyslam/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object graph_optimization/CMakeFiles/DBoW2.dir/DBoW2/src/FeatureVector.cpp.o"
-	cd /home/donghoon/ToySLAM/toy_VO/toyslam/build/graph_optimization && /usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/DBoW2.dir/DBoW2/src/FeatureVector.cpp.o -c /home/donghoon/ToySLAM/toy_VO/toyslam/graph_optimization/DBoW2/src/FeatureVector.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object graph_optimization/CMakeFiles/DBoW2.dir/DBoW2/src/FeatureVector.cpp.o"
+	cd /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/build/graph_optimization && /usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/DBoW2.dir/DBoW2/src/FeatureVector.cpp.o -c /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/graph_optimization/DBoW2/src/FeatureVector.cpp
 
 graph_optimization/CMakeFiles/DBoW2.dir/DBoW2/src/FeatureVector.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/DBoW2.dir/DBoW2/src/FeatureVector.cpp.i"
-	cd /home/donghoon/ToySLAM/toy_VO/toyslam/build/graph_optimization && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/donghoon/ToySLAM/toy_VO/toyslam/graph_optimization/DBoW2/src/FeatureVector.cpp > CMakeFiles/DBoW2.dir/DBoW2/src/FeatureVector.cpp.i
+	cd /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/build/graph_optimization && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/graph_optimization/DBoW2/src/FeatureVector.cpp > CMakeFiles/DBoW2.dir/DBoW2/src/FeatureVector.cpp.i
 
 graph_optimization/CMakeFiles/DBoW2.dir/DBoW2/src/FeatureVector.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/DBoW2.dir/DBoW2/src/FeatureVector.cpp.s"
-	cd /home/donghoon/ToySLAM/toy_VO/toyslam/build/graph_optimization && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/donghoon/ToySLAM/toy_VO/toyslam/graph_optimization/DBoW2/src/FeatureVector.cpp -o CMakeFiles/DBoW2.dir/DBoW2/src/FeatureVector.cpp.s
+	cd /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/build/graph_optimization && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/graph_optimization/DBoW2/src/FeatureVector.cpp -o CMakeFiles/DBoW2.dir/DBoW2/src/FeatureVector.cpp.s
 
 graph_optimization/CMakeFiles/DBoW2.dir/DBoW2/src/FeatureVector.cpp.o.requires:
 
@@ -155,16 +155,16 @@ graph_optimization/CMakeFiles/DBoW2.dir/DBoW2/src/FeatureVector.cpp.o.provides.b
 
 graph_optimization/CMakeFiles/DBoW2.dir/DBoW2/src/QueryResults.cpp.o: graph_optimization/CMakeFiles/DBoW2.dir/flags.make
 graph_optimization/CMakeFiles/DBoW2.dir/DBoW2/src/QueryResults.cpp.o: ../graph_optimization/DBoW2/src/QueryResults.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/donghoon/ToySLAM/toy_VO/toyslam/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object graph_optimization/CMakeFiles/DBoW2.dir/DBoW2/src/QueryResults.cpp.o"
-	cd /home/donghoon/ToySLAM/toy_VO/toyslam/build/graph_optimization && /usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/DBoW2.dir/DBoW2/src/QueryResults.cpp.o -c /home/donghoon/ToySLAM/toy_VO/toyslam/graph_optimization/DBoW2/src/QueryResults.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object graph_optimization/CMakeFiles/DBoW2.dir/DBoW2/src/QueryResults.cpp.o"
+	cd /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/build/graph_optimization && /usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/DBoW2.dir/DBoW2/src/QueryResults.cpp.o -c /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/graph_optimization/DBoW2/src/QueryResults.cpp
 
 graph_optimization/CMakeFiles/DBoW2.dir/DBoW2/src/QueryResults.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/DBoW2.dir/DBoW2/src/QueryResults.cpp.i"
-	cd /home/donghoon/ToySLAM/toy_VO/toyslam/build/graph_optimization && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/donghoon/ToySLAM/toy_VO/toyslam/graph_optimization/DBoW2/src/QueryResults.cpp > CMakeFiles/DBoW2.dir/DBoW2/src/QueryResults.cpp.i
+	cd /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/build/graph_optimization && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/graph_optimization/DBoW2/src/QueryResults.cpp > CMakeFiles/DBoW2.dir/DBoW2/src/QueryResults.cpp.i
 
 graph_optimization/CMakeFiles/DBoW2.dir/DBoW2/src/QueryResults.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/DBoW2.dir/DBoW2/src/QueryResults.cpp.s"
-	cd /home/donghoon/ToySLAM/toy_VO/toyslam/build/graph_optimization && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/donghoon/ToySLAM/toy_VO/toyslam/graph_optimization/DBoW2/src/QueryResults.cpp -o CMakeFiles/DBoW2.dir/DBoW2/src/QueryResults.cpp.s
+	cd /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/build/graph_optimization && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/graph_optimization/DBoW2/src/QueryResults.cpp -o CMakeFiles/DBoW2.dir/DBoW2/src/QueryResults.cpp.s
 
 graph_optimization/CMakeFiles/DBoW2.dir/DBoW2/src/QueryResults.cpp.o.requires:
 
@@ -179,16 +179,16 @@ graph_optimization/CMakeFiles/DBoW2.dir/DBoW2/src/QueryResults.cpp.o.provides.bu
 
 graph_optimization/CMakeFiles/DBoW2.dir/DBoW2/src/ScoringObject.cpp.o: graph_optimization/CMakeFiles/DBoW2.dir/flags.make
 graph_optimization/CMakeFiles/DBoW2.dir/DBoW2/src/ScoringObject.cpp.o: ../graph_optimization/DBoW2/src/ScoringObject.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/donghoon/ToySLAM/toy_VO/toyslam/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building CXX object graph_optimization/CMakeFiles/DBoW2.dir/DBoW2/src/ScoringObject.cpp.o"
-	cd /home/donghoon/ToySLAM/toy_VO/toyslam/build/graph_optimization && /usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/DBoW2.dir/DBoW2/src/ScoringObject.cpp.o -c /home/donghoon/ToySLAM/toy_VO/toyslam/graph_optimization/DBoW2/src/ScoringObject.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building CXX object graph_optimization/CMakeFiles/DBoW2.dir/DBoW2/src/ScoringObject.cpp.o"
+	cd /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/build/graph_optimization && /usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/DBoW2.dir/DBoW2/src/ScoringObject.cpp.o -c /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/graph_optimization/DBoW2/src/ScoringObject.cpp
 
 graph_optimization/CMakeFiles/DBoW2.dir/DBoW2/src/ScoringObject.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/DBoW2.dir/DBoW2/src/ScoringObject.cpp.i"
-	cd /home/donghoon/ToySLAM/toy_VO/toyslam/build/graph_optimization && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/donghoon/ToySLAM/toy_VO/toyslam/graph_optimization/DBoW2/src/ScoringObject.cpp > CMakeFiles/DBoW2.dir/DBoW2/src/ScoringObject.cpp.i
+	cd /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/build/graph_optimization && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/graph_optimization/DBoW2/src/ScoringObject.cpp > CMakeFiles/DBoW2.dir/DBoW2/src/ScoringObject.cpp.i
 
 graph_optimization/CMakeFiles/DBoW2.dir/DBoW2/src/ScoringObject.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/DBoW2.dir/DBoW2/src/ScoringObject.cpp.s"
-	cd /home/donghoon/ToySLAM/toy_VO/toyslam/build/graph_optimization && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/donghoon/ToySLAM/toy_VO/toyslam/graph_optimization/DBoW2/src/ScoringObject.cpp -o CMakeFiles/DBoW2.dir/DBoW2/src/ScoringObject.cpp.s
+	cd /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/build/graph_optimization && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/graph_optimization/DBoW2/src/ScoringObject.cpp -o CMakeFiles/DBoW2.dir/DBoW2/src/ScoringObject.cpp.s
 
 graph_optimization/CMakeFiles/DBoW2.dir/DBoW2/src/ScoringObject.cpp.o.requires:
 
@@ -229,7 +229,9 @@ graph_optimization/libDBoW2.so: /usr/local/lib/libopencv_ccalib.so.4.0.1
 graph_optimization/libDBoW2.so: /usr/local/lib/libopencv_dnn_objdetect.so.4.0.1
 graph_optimization/libDBoW2.so: /usr/local/lib/libopencv_dpm.so.4.0.1
 graph_optimization/libDBoW2.so: /usr/local/lib/libopencv_face.so.4.0.1
+graph_optimization/libDBoW2.so: /usr/local/lib/libopencv_freetype.so.4.0.1
 graph_optimization/libDBoW2.so: /usr/local/lib/libopencv_fuzzy.so.4.0.1
+graph_optimization/libDBoW2.so: /usr/local/lib/libopencv_hdf.so.4.0.1
 graph_optimization/libDBoW2.so: /usr/local/lib/libopencv_hfs.so.4.0.1
 graph_optimization/libDBoW2.so: /usr/local/lib/libopencv_img_hash.so.4.0.1
 graph_optimization/libDBoW2.so: /usr/local/lib/libopencv_line_descriptor.so.4.0.1
@@ -243,6 +245,7 @@ graph_optimization/libDBoW2.so: /usr/local/lib/libopencv_superres.so.4.0.1
 graph_optimization/libDBoW2.so: /usr/local/lib/libopencv_surface_matching.so.4.0.1
 graph_optimization/libDBoW2.so: /usr/local/lib/libopencv_tracking.so.4.0.1
 graph_optimization/libDBoW2.so: /usr/local/lib/libopencv_videostab.so.4.0.1
+graph_optimization/libDBoW2.so: /usr/local/lib/libopencv_viz.so.4.0.1
 graph_optimization/libDBoW2.so: /usr/local/lib/libopencv_xfeatures2d.so.4.0.1
 graph_optimization/libDBoW2.so: /usr/local/lib/libopencv_xobjdetect.so.4.0.1
 graph_optimization/libDBoW2.so: /usr/local/lib/libopencv_xphoto.so.4.0.1
@@ -267,8 +270,8 @@ graph_optimization/libDBoW2.so: /usr/local/lib/libopencv_photo.so.4.0.1
 graph_optimization/libDBoW2.so: /usr/local/lib/libopencv_imgproc.so.4.0.1
 graph_optimization/libDBoW2.so: /usr/local/lib/libopencv_core.so.4.0.1
 graph_optimization/libDBoW2.so: graph_optimization/CMakeFiles/DBoW2.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/donghoon/ToySLAM/toy_VO/toyslam/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Linking CXX shared library libDBoW2.so"
-	cd /home/donghoon/ToySLAM/toy_VO/toyslam/build/graph_optimization && $(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/DBoW2.dir/link.txt --verbose=$(VERBOSE)
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Linking CXX shared library libDBoW2.so"
+	cd /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/build/graph_optimization && $(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/DBoW2.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.
 graph_optimization/CMakeFiles/DBoW2.dir/build: graph_optimization/libDBoW2.so
@@ -285,10 +288,10 @@ graph_optimization/CMakeFiles/DBoW2.dir/requires: graph_optimization/CMakeFiles/
 .PHONY : graph_optimization/CMakeFiles/DBoW2.dir/requires
 
 graph_optimization/CMakeFiles/DBoW2.dir/clean:
-	cd /home/donghoon/ToySLAM/toy_VO/toyslam/build/graph_optimization && $(CMAKE_COMMAND) -P CMakeFiles/DBoW2.dir/cmake_clean.cmake
+	cd /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/build/graph_optimization && $(CMAKE_COMMAND) -P CMakeFiles/DBoW2.dir/cmake_clean.cmake
 .PHONY : graph_optimization/CMakeFiles/DBoW2.dir/clean
 
 graph_optimization/CMakeFiles/DBoW2.dir/depend:
-	cd /home/donghoon/ToySLAM/toy_VO/toyslam/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/donghoon/ToySLAM/toy_VO/toyslam /home/donghoon/ToySLAM/toy_VO/toyslam/graph_optimization /home/donghoon/ToySLAM/toy_VO/toyslam/build /home/donghoon/ToySLAM/toy_VO/toyslam/build/graph_optimization /home/donghoon/ToySLAM/toy_VO/toyslam/build/graph_optimization/CMakeFiles/DBoW2.dir/DependInfo.cmake --color=$(COLOR)
+	cd /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/graph_optimization /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/build /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/build/graph_optimization /home/donghoon/toy_VO_from_Scratch/toy_VO/toyslam/build/graph_optimization/CMakeFiles/DBoW2.dir/DependInfo.cmake --color=$(COLOR)
 .PHONY : graph_optimization/CMakeFiles/DBoW2.dir/depend
 

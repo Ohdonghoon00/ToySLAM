@@ -94,6 +94,27 @@ cv::Mat vec6d_to_homogenous_campose(cv::Vec6d Rt_cam)
     return _Rt.inv();
 }
 
+Eigen::Matrix4d Mat44dToEigen44d(cv::Mat a)
+{
+    Eigen::Matrix4d bb;
+    bb <<   a.at<double>(0, 0), a.at<double>(0, 1), a.at<double>(0, 2), a.at<double>(0, 3),
+            a.at<double>(1, 0), a.at<double>(1, 1), a.at<double>(1, 2), a.at<double>(1, 3),
+            a.at<double>(2, 0), a.at<double>(2, 1), a.at<double>(2, 2), a.at<double>(2, 3),
+            a.at<double>(3, 0), a.at<double>(3, 1), a.at<double>(3, 2), a.at<double>(3, 3);
+
+    return bb;
+}
+
+Eigen::Matrix4d RtToEigen44Md(Eigen::Matrix3d a, Eigen::Vector3d b)
+{
+    Eigen::Matrix4d bb;
+    bb <<   a(0, 0), a(0, 1), a(0, 2), b[0],
+            a(1, 0), a(1, 1), a(1, 2), b[1],
+            a(2, 0), a(2, 1), a(2, 2), b[2],
+                  0,       0,       0,    1;
+    return bb;
+}
+
 cv::Mat cam_storage_to_projection_matrix(cv::Vec6d cam_storage)
 {
     cv::Mat P_ = vec6d_to_homogenous_campose(cam_storage);
@@ -236,6 +257,47 @@ void track_opticalflow_and_remove_err_for_SolvePnP(cv::Mat &previous_, cv::Mat &
 
                     previous_pts_.erase ( previous_pts_.begin() + i - indexCorrection);
                     previous_pts_id_.erase( previous_pts_id_.begin() + i - indexCorrection);
+                    current_pts_.erase (current_pts_.begin() + i - indexCorrection);
+                    map_point_.erase (map_point_.begin() + i - indexCorrection);
+                    // previous_track_point_for_triangulate_.erase(previous_track_point_for_triangulate_.begin() + i - indexCorrection);
+                    indexCorrection++;
+        }
+        // else 
+        // {
+        //     correspond_id_.push_back(i);
+        // }
+
+    }     
+
+    
+
+}
+
+void track_opticalflow_and_remove_err_for_SolvePnP_noid(cv::Mat &previous_, cv::Mat &current_, std::vector<cv::Point2f> &previous_pts_, std::vector<cv::Point2f> &current_pts_, std::vector<cv::Point3d> &map_point_)
+{
+    std::vector<uchar> status_;
+    cv::Mat err_;
+    // std::vector<int> correspond_id_;
+
+    current_pts_.clear();
+
+    cv::calcOpticalFlowPyrLK(previous_, current_, previous_pts_, current_pts_, status_, err_);
+
+    const int image_x_size_ = previous_.cols;
+    const int image_y_size_ = previous_.rows;
+
+    // remove err point
+    int indexCorrection = 0;
+
+    for( int i=0; i<status_.size(); i++)
+    {
+        cv::Point2f pt = current_pts_.at(i- indexCorrection);
+        if((pt.x < 0)||(pt.y < 0 )||(pt.x > image_x_size_)||(pt.y > image_y_size_)) status_[i] = 0;        
+        if (status_[i] == 0)	
+        {
+
+                    previous_pts_.erase ( previous_pts_.begin() + i - indexCorrection);
+                    
                     current_pts_.erase (current_pts_.begin() + i - indexCorrection);
                     map_point_.erase (map_point_.begin() + i - indexCorrection);
                     // previous_track_point_for_triangulate_.erase(previous_track_point_for_triangulate_.begin() + i - indexCorrection);
@@ -395,6 +457,7 @@ void changeStructure(const cv::Mat &plain, std::vector<cv::Mat> &out)
 
 Eigen::Matrix3d RotationMatToEigen3d(cv::Mat r_)
 {   
+    
     Eigen::Matrix3d aa;
     aa <<   r_.at<double>(0, 0), r_.at<double>(0, 1), r_.at<double>(0, 2),
             r_.at<double>(1, 0), r_.at<double>(1, 1), r_.at<double>(1, 2),
