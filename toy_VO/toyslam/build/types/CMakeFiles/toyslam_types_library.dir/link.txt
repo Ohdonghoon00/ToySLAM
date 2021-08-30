@@ -1,2 +1,0 @@
-/usr/bin/ar qc libtoyslam_types_library.a  CMakeFiles/toyslam_types_library.dir/Frame.cpp.o CMakeFiles/toyslam_types_library.dir/Map.cpp.o CMakeFiles/toyslam_types_library.dir/Data.cpp.o CMakeFiles/toyslam_types_library.dir/parameter.cpp.o
-/usr/bin/ranlib libtoyslam_types_library.a

@@ -1,2 +1,0 @@
-/usr/bin/ar qc libtoyslam_graph_optimization_library.a  CMakeFiles/toyslam_graph_optimization_library.dir/global_optimize.cpp.o CMakeFiles/toyslam_graph_optimization_library.dir/loop_detection.cpp.o CMakeFiles/toyslam_graph_optimization_library.dir/pose_graph.cpp.o
-/usr/bin/ranlib libtoyslam_graph_optimization_library.a

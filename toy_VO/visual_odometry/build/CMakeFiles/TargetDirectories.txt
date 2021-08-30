@@ -1,6 +1,0 @@
-/home/donghoon/toy_VO_from_Scratch/toy_VO/visual_odometry/build/CMakeFiles/edit_cache.dir
-/home/donghoon/toy_VO_from_Scratch/toy_VO/visual_odometry/build/CMakeFiles/rebuild_cache.dir
-/home/donghoon/toy_VO_from_Scratch/toy_VO/visual_odometry/build/CMakeFiles/functiontest.dir
-/home/donghoon/toy_VO_from_Scratch/toy_VO/visual_odometry/build/CMakeFiles/SolvePnP_test.dir
-/home/donghoon/toy_VO_from_Scratch/toy_VO/visual_odometry/build/CMakeFiles/SolvePnP_test_V3.dir
-/home/donghoon/toy_VO_from_Scratch/toy_VO/visual_odometry/build/CMakeFiles/SolvePnP_test_V2.dir
