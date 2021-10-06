@@ -22,7 +22,7 @@
 #include "g2o/types/sim3/types_seven_dof_expmap.h"
 
 #include "../types/Map.h"
-#include "../math.h"
+#include "../types/common.h"
 #include "opencv2/opencv.hpp"
 #include <iostream>
 

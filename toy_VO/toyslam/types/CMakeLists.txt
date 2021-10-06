@@ -5,6 +5,7 @@ add_library(toyslam_types_library
   Map.cpp
   Data.cpp
   parameter.cpp
+  common.cpp
 )
   
 

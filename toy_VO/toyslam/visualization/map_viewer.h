@@ -3,7 +3,7 @@
 // #include <GL/gl.h>
 #include "opencv2/opencv.hpp"
 #include "../types/Map.h"
-#include "../math.h"
+#include "../types/common.h"
 
 
 

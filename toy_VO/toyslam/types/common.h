@@ -2,7 +2,7 @@
 #include "opencv2/opencv.hpp"
 #include "opencv2/sfm/projection.hpp"
 #include "Eigen/Dense"
-#include "types/Map.h"
+#include "Map.h"
 
 void print_map(std::map<int, cv::Point3d>& m);
 

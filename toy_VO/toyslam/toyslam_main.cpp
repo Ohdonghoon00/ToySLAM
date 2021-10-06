@@ -19,6 +19,7 @@
 #include <Eigen/Dense>
 
 #include "ceres/ceres.h"
+#include "gurobi_c++.h"
 
 
 using namespace std;
@@ -66,14 +67,14 @@ int main(int argc, char **argv)
 //////////////////////////////////        Parameter       /////////////////////////////////////////////////////////////////////          
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////    
     
-    int max_keypoint = 1500;        // max feature detection number
-    int initialize_frame_num = 6;   // number of 5 point algorithm ( Essential Matrix ) 
+    int max_keypoint = 1000;        // max feature detection number
+    int initialize_frame_num = 5;   // number of 5 point algorithm ( Essential Matrix ) 
     float SolvePnP_reprojection_error = 3.0F;
 
     // Keyframe Selection
-    int KS_track_overlap_ratio= 65;
-    int KS_inliers_num = 300;
-    double KS_yaw_difference = 100; // 0.055
+    // int KS_track_overlap_ratio= 65;
+    // int KS_inliers_num = 300;
+    // double KS_yaw_difference = 100; // 0.055
     
     // Local BA 
     int fix_keyframe_num = 10;
@@ -916,9 +917,9 @@ std::cout << "High score keyframe  num : "  << ret[0].Id << "       Score : " <<
                     //     cv::waitKey();
                     // }
                     
-                    if(loop_KF_threshold > 10)
+                    if(loop_KF_threshold > 15)
                     { 
-                        if(ret[0].Score > 0.38) 
+                        if(ret[0].Score > 0.36) 
                         {
                             loop_detect = true;
                             loop_KF_threshold = 0;
@@ -995,7 +996,7 @@ std::cout << "High score keyframe  num : "  << ret[0].Id << "       Score : " <<
                                 // std::cout << idx0 << "  edge  " << idx1 << std::endl;
                             }
                         }
-                        // std::cout << " Add " << keyframe_num - made_vertex_id << " edge " << std::endl;
+                        // std::cout << " Add " glPointSize_num;
                         made_vertex_id = keyframe_num;
                         // std::cout << " edge index : " << edge_index << std::endl;
 
@@ -1006,7 +1007,7 @@ std::cout << "High score keyframe  num : "  << ret[0].Id << "       Score : " <<
                         // double scale = FindLoopEdgeScale(loop_detect_frame_id, keyframe_num, map_storage, K, inlier_storage, relpose_);                            
                         if(scale == 1.0 or scale < 0.3 or scale >2.0)
                         {
-                            loop_KF_threshold = 11;
+                            loop_KF_threshold = 16;
                             GoodLoopEdge = false;
                         }
                         if(GoodLoopEdge)
@@ -1254,7 +1255,7 @@ std::cout << " same point :  " << same_point_num << " different point num  : " <
         for(int i = 0 ; i < GT_Storage.size(); i++)
         {
             GLfloat x_gt(GT_Storage[i].at<double>(0, 3)), y_gt(GT_Storage[i].at<double>(1, 3)), z_gt(GT_Storage[i].at<double>(2, 3));
-            show_trajectory(x_gt, y_gt, z_gt, 1.0, 0.0, 0.0, 3.0);
+            // show_trajectory(x_gt, y_gt, z_gt, 1.0, 0.0, 0.0, 3.0);
         }
         // Show camera estimate pose trajectory_motion_only_ba ( green line )
         cv::Mat campose_vec6d_to_mat_for_visualize = vec6d_to_homogenous_campose(current_image.cam_pose);
@@ -1321,15 +1322,17 @@ std::cout << " map_storage size is : " << map_storage.world_xyz.size() << endl;
         if (new_keyframe_selection)
         { 
             inlier_map_storage.clear();
+            map_storage.InlierID.clear();
             for(int j = 0; j < keyframe_num + 1; j ++)
             {
                 for(int i = 0; i < inlier_storage[j].rows; i++)
                 {
                     int id_ = map_storage.keyframe[j].pts_id[inlier_storage[j].at<int>(i, 0)];
                     inlier_map_storage.push_back(map_storage.world_xyz[id_]);
+                    map_storage.InlierID.push_back(id_);
                 }
             }
-            
+std::cout << " Inlier Map_Storage size is  : " << inlier_map_storage.size() << std::endl;
             for(int i = 0 ; i < inlier_map_storage.size(); i++)
             {
                 GLdouble X_map(inlier_map_storage[i].x), Y_map(inlier_map_storage[i].y), Z_map(inlier_map_storage[i].z);
@@ -1406,6 +1409,85 @@ std::cout << " map_storage size is : " << map_storage.world_xyz.size() << endl;
         if(want_frame_num) if(times > go_to_frame_num) cv::waitKey(); 
     }
 std::cout << " Finish SLAM " << endl;    
+    
+    sort(map_storage.InlierID.begin(), map_storage.InlierID.end());
+    map_storage.InlierID.erase(unique(map_storage.InlierID.begin(),map_storage.InlierID.end()),map_storage.InlierID.end());
+    
+    for(int i = 0; i < map_storage.InlierID.size(); i++)
+        map_storage.InlierMap.push_back(map_storage.world_xyz[map_storage.InlierID[i]]);
+
+    // for(int i = 0; i < map_storage.InlierID.size(); i++) std::cout << map_storage.InlierID[i] << "      ";
+    std::cout << "  Keyframe num : " << map_storage.keyframe.size() << std::endl;
+    std::cout << " Inlier Map Storage num : " << map_storage.InlierID.size() << "   " << map_storage.InlierMap.size() << std::endl;
+    std::cout << " world_xyz num ( all 3d point ) : " << map_storage.world_xyz.size() << std::endl;
+    
+    std::cout << inlier_storage.size() << std::endl;
+    
+
+
+    // Map Compression
+std::cout << "Map Compression ... " << std::endl;
+    GRBEnv env = GRBEnv();
+    GRBModel model = GRBModel(env);
+    int PointCloudNum = map_storage.InlierMap.size();
+    
+std::cout << " Create Variables ... " << std:: endl;
+    // Create Variables
+    std::vector<GRBVar> x = CreateVariablesBinaryVector(PointCloudNum, model);
+
+std::cout << " Set Objective ... " << std:: endl;
+    // Set Objective
+    Eigen::Matrix<double, Eigen::Dynamic, 1> q = CalculateObservationCountWeight(map_storage);
+    SetObjectiveILP(x, q, model);
+
+std::cout << " Add Constraint ... " << std:: endl;    
+    // Add Constraint
+    Eigen::MatrixXd A =CalculateVisibilityMatrix(map_storage, inlier_storage);
+    AddConstraint(map_storage, model, A, x);
+
+std::cout << " Optimize model ... " << std:: endl;
+    // Optimize model
+    model.optimize();
+
+    std::cout << "Obj: " << model.get(GRB_DoubleAttr_ObjVal) << endl;
+    // cout << " x : "; 
+    // for(int i = 0; i < x.size(); i++) 
+    // {
+    //     std::cout   << x[i].get(GRB_DoubleAttr_X) << "  ";
+    // }
+    // std::cout << std::endl;
+
+    for(int i = 0; i < x.size(); i++)
+    {
+        if(x[i].get(GRB_DoubleAttr_X) == 1)
+        {
+            map_storage.CompressionMap.push_back(map_storage.InlierMap[i]);
+        }
+        
+    }
+    std::cout << " Remain Map point num : " << map_storage.CompressionMap.size() << std::endl;
+    cv::waitKey();
+
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    for(int i = 0 ; i < map_storage.CompressionMap.size(); i++)
+    {
+        GLdouble X_map(map_storage.CompressionMap[i].x), Y_map(map_storage.CompressionMap[i].y), Z_map(map_storage.CompressionMap[i].z);
+        show_trajectory(X_map, Y_map, Z_map, 0.0, 0.0, 0.0, 0.01);            
+    }
+    
+    for(int i = 0; i < keyframe_num; i++)
+    {
+        cv::Mat campose_vec6d_to_mat_for_visualize = vec6d_to_homogenous_campose(map_storage.keyframe[i].cam_pose);
+        cv::Mat rb_t_ = homogenous_campose_for_keyframe_visualize(campose_vec6d_to_mat_for_visualize, 8.0); // size
+        show_trajectory_keyframe(rb_t_, 0.0, 0.0, 1.0, 1.0);
+    }
+    cv::Mat campose_vec6d_to_mat_for_visualize = vec6d_to_homogenous_campose(map_storage.keyframe[keyframe_num].cam_pose);
+    cv::Mat rb_t_ = homogenous_campose_for_keyframe_visualize(campose_vec6d_to_mat_for_visualize, 8.0);
+    show_trajectory_keyframe(rb_t_, 0.0, 1.0, 0.0, 1.0);
+    glFlush();
+
+
     cv::waitKey();
     return 0;
 }

@@ -3,7 +3,7 @@
 // #include "opencv2/opencv.hpp"
 // #include "opencv2/sfm/projection.hpp"
 
-#include "math.h"
+#include "common.h"
 
 
 void print_map(std::map<int, cv::Point3d>& m) 

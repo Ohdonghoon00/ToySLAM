@@ -12,6 +12,10 @@ class Map
         std::map< int, Frame > keyframe;
         std::map< int, cv::Point3d> world_xyz;
         std::map< int, std::vector<int> > MapToKF_ids;
+        std::vector<cv::Point3d> InlierMap;
+        std::vector<int> InlierID;
+
+        std::vector<cv::Point3d> CompressionMap;
         
         std::map< int, std::vector<cv::KeyPoint> > LoopKeyPoint;
         // std::map< int, std::vector<cv::Point2f> > LoopPoint2f;
@@ -37,6 +41,9 @@ class Map
             LoopKeyPoint = tc.LoopKeyPoint;
             // LoopPoint2f = tc.LoopPoint2f;
             LoopDescriptor = tc.LoopDescriptor;
+            InlierMap = tc.InlierMap;
+            InlierID = tc.InlierID;
+            CompressionMap = tc.CompressionMap;
         }
 
         // void MakeLoopMap(int BeforeNum, int CurrNum, Map MapInfo)
