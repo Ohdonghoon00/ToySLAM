@@ -3,8 +3,8 @@
 
 
 
-class keypoint
-{
+// class keypoint
+// {
     // public:
     //     std::map< int, Frame > keyframe;
     //     std::map< int, cv::Point3d> world_xyz;
@@ -27,4 +27,4 @@ class keypoint
     //         world_xyz = tc.world_xyz;
 
     //     }
-};
+// };

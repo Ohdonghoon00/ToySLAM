@@ -9,6 +9,6 @@ add_library(toyslam_types_library
 )
   
 
-# target_link_libraries(toyslam_types_library
-#   ${OpenCV_LIBS}
-# )
+target_link_libraries(toyslam_types_library
+  ${OpenCV_LIBS}
+)

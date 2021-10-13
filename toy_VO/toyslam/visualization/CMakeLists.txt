@@ -8,4 +8,5 @@ target_link_libraries(toyslam_visualization_library
     GL
     GLU
     glut
+    toyslam_types_library
 )

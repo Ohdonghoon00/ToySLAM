@@ -232,7 +232,7 @@ void track_opticalflow_and_remove_err_for_triangulate_(cv::Mat &previous_, cv::M
 
 }
 
-void track_opticalflow_and_remove_err_for_SolvePnP(cv::Mat &previous_, cv::Mat &current_, std::vector<cv::Point2f> &previous_pts_, std::vector<cv::Point2f> &current_pts_, std::vector<int> &previous_pts_id_, std::vector<cv::Point3d> &map_point_)
+void track_opticalflow_and_remove_err_for_SolvePnP_(cv::Mat &previous_, cv::Mat &current_, std::vector<cv::Point2f> &previous_pts_, std::vector<cv::Point2f> &current_pts_, std::vector<int> &previous_pts_id_, std::vector<cv::Point3d> &map_point_)
 {
     std::vector<uchar> status_;
     cv::Mat err_;
@@ -260,6 +260,45 @@ void track_opticalflow_and_remove_err_for_SolvePnP(cv::Mat &previous_, cv::Mat &
                     current_pts_.erase (current_pts_.begin() + i - indexCorrection);
                     map_point_.erase (map_point_.begin() + i - indexCorrection);
                     // previous_track_point_for_triangulate_.erase(previous_track_point_for_triangulate_.begin() + i - indexCorrection);
+                    indexCorrection++;
+        }
+        // else 
+        // {
+        //     correspond_id_.push_back(i);
+        // }
+
+    }     
+
+    
+
+}
+
+void track_opticalflow_and_remove_err_for_SolvePnP(cv::Mat &previous_, cv::Mat &current_, std::vector<cv::Point2f> &previous_pts_, std::vector<cv::Point2f> &current_pts_, std::vector<cv::Point3d> &map_point_)
+{
+    std::vector<uchar> status_;
+    cv::Mat err_;
+    // std::vector<int> correspond_id_;
+
+    current_pts_.clear();
+
+    cv::calcOpticalFlowPyrLK(previous_, current_, previous_pts_, current_pts_, status_, err_);
+
+    const int image_x_size_ = previous_.cols;
+    const int image_y_size_ = previous_.rows;
+
+    // remove err point
+    int indexCorrection = 0;
+
+    for( int i=0; i<status_.size(); i++)
+    {
+        cv::Point2f pt = current_pts_.at(i- indexCorrection);
+        if((pt.x < 0)||(pt.y < 0 )||(pt.x > image_x_size_)||(pt.y > image_y_size_)) status_[i] = 0;        
+        if (status_[i] == 0)	
+        {
+
+                    previous_pts_.erase ( previous_pts_.begin() + i - indexCorrection);
+                    current_pts_.erase (current_pts_.begin() + i - indexCorrection);
+                    map_point_.erase (map_point_.begin() + i - indexCorrection);
                     indexCorrection++;
         }
         // else 
@@ -314,7 +353,7 @@ void track_opticalflow_and_remove_err_for_SolvePnP_noid(cv::Mat &previous_, cv::
 
 }
 
-void remove_map_point_and_2dpoint_outlier (std::vector<cv::Point3d> &map_point_, std::vector<cv::Point2f> &current_pts_, cv::Mat &current_cam_pose_)
+void remove_map_point_and_2dpoint_outlier (std::vector<cv::Point3d> &map_point_, std::vector<cv::Point2f> &current_pts_, cv::Mat current_cam_pose_)
 {
 
 
@@ -357,7 +396,7 @@ void remove_map_point_and_2dpoint_outlier (std::vector<cv::Point3d> &map_point_,
 }
 
 
-void remove_map_point_and_2dpoint_outlier_(std::vector<cv::Point3d> &map_point_, std::vector<cv::Point2f> &current_pts_, std::vector<int> &previous_track_point_for_triangulate_ID_, cv::Mat &current_cam_pose_)
+void remove_map_point_and_2dpoint_outlier_(std::vector<cv::Point3d> &map_point_, std::vector<cv::Point2f> &current_pts_, std::vector<int> &previous_track_point_for_triangulate_ID_, cv::Mat current_cam_pose_)
 {
 
 
@@ -498,3 +537,32 @@ Eigen::Quaterniond getQuaternionFromRotationMatrix(const Eigen::Matrix3d& mat)
 //     Eigen::Quaterniond abc;
 
 // }
+
+std::vector<cv::Point2f> KeypointToPoint2f(std::vector<cv::KeyPoint> keypoint)
+{
+    std::vector<cv::Point2f> pts;
+    for(int i = 0; i < keypoint.size(); i++)
+    {
+        pts.push_back(keypoint[i].pt);
+    }
+}
+    
+void RemovePnPOutlier(std::vector<cv::Point3d>& MP, std::vector<cv::Point2f>& pts, cv::Mat inliers)
+{
+    std::vector<cv::Point3d> clone_MP;
+    std::vector<cv::Point2f> clone_pts;
+    
+    for(int i = 0; i < inliers.rows; i++)
+    {
+        clone_MP.push_back(MP[inliers.at<int>(i, 0)]);
+        clone_pts.push_back(pts[inliers.at<int>(i, 0)]);
+
+    }
+    
+    MP.clear();
+    pts.clear();
+
+    MP = clone_MP;
+    pts = clone_pts;
+}    
+
