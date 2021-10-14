@@ -80,9 +80,9 @@ int main(int argc, char **argv)
     int active_keyframe_num = 3;
 
     // show image delay
-    bool show_image_one_by_one = true;
+    bool show_image_one_by_one = false;
     bool realtime_delay = false;
-    bool fast_slam = false;
+    bool fast_slam = true;
     bool want_frame_num = false;
     int go_to_frame_num = 540;
     int made_vertex_id = 0;
@@ -151,8 +151,9 @@ int main(int argc, char **argv)
     // const int image_x_size = previous_image.frame.cols;
     // const int image_y_size = previous_image.frame.rows;
     
-    std::vector<cv::KeyPoint> init_keypoints;
-    cv::Mat init_descriptors, init_mask, init_inlier_mask;
+    // parameter for Map
+    std::vector<cv::KeyPoint> PrevKeypoints, CurrKeypoints;
+    cv::Mat PrevDescriptors, CurrDescriptors, PrevMask, CurrMask, PrevInlier_mask, CurrInlier_mask;
     
     std::vector<cv::Point2f> PrevPts, CurrPts;
     std::vector<Point3d> CurrMP;
@@ -228,8 +229,8 @@ int main(int argc, char **argv)
             if(times == 1)
             {   
                 // Extract Feature ( ORB feature for map / goodfeature for track )
-                cv::Ptr<cv::ORB> orb = cv::ORB::create(1000);
-                orb->detectAndCompute(previous_image.frame, init_mask, init_keypoints, init_descriptors);
+                cv::Ptr<cv::ORB> orb = cv::ORB::create(4000);
+                orb->detectAndCompute(previous_image.frame, PrevMask, PrevKeypoints, PrevDescriptors);
                 cv::goodFeaturesToTrack(previous_image.frame, PrevTrackPts, max_keypoint, 0.01, 10);
                 PrevTriangulateTrackPts = PrevTrackPts;
 std::cout << " Init Extract track point num  : " << PrevTrackPts.size() << endl;   
@@ -317,37 +318,44 @@ std::cout << keyframe_num << "  keyframe Track PnP Inlier rate : " << 100 * inli
 /////////////////////////////       Triangulate for Map  /////////////////////////////////////////////////////////////
                 
                 // Extract ORB Feature for Map 
-                cv::Ptr<cv::ORB> orb = cv::ORB::create(1000);
+                cv::Ptr<cv::ORB> orb = cv::ORB::create(4000);
                 std::cout << "Extracting ORB features in " << keyframe_num << " keyframe " << std::endl;
 
-                std::vector<cv::KeyPoint> keypoints;
-                cv::Mat descriptors, mask;
+
                 features.clear();
-                orb->detectAndCompute(current_image.frame, mask, keypoints, descriptors);
+                orb->detectAndCompute(current_image.frame, CurrMask, CurrKeypoints, CurrDescriptors);
                 features.push_back(vector<cv::Mat >());
-                changeStructure(descriptors, features.back());
+                changeStructure(CurrDescriptors, features.back());
                 
                 // map_storage.LoopDescriptor.insert(std::pair<int, cv::Mat>(keyframe_num, descriptors));
                 // map_storage.LoopKeyPoint.insert(std::pair<int, std::vector<cv::KeyPoint>>(keyframe_num, keypoints));
 
-                cv::Mat KeypointImg;
-                cv::drawKeypoints(current_image.frame, keypoints, KeypointImg, cv::Scalar(0, 0, 255));
-                cv::imshow("KeypointImg", KeypointImg);
+
                 db.add(features[0]);
                 
                 // Matching ORB Feature 
                 cv::Ptr<DescriptorMatcher> matcher = cv::BFMatcher::create(NORM_HAMMING);
                 std::vector<cv::DMatch> matches;
-                matcher -> match(init_descriptors, descriptors, matches);
+                matcher -> match(PrevDescriptors, CurrDescriptors, matches);
                 std::sort(matches.begin(), matches.end());
                 std::vector<cv::DMatch> good_matches(matches.begin(), matches.begin() + 300);
-                PrevGoodMatches.clear();
-                PrevGoodMatches = good_matches;
+                CurrGoodMatches.clear();
+                CurrGoodMatches = good_matches;
+                
+                // // drawing the results
+                // Mat img_matches;
 
-                for(size_t i = 0; i < PrevGoodMatches.size(); i++)
+                
+                // cv::drawMatches(frame_storage[0].frame, PrevKeypoints, current_image.frame, CurrKeypoints,
+                //     CurrGoodMatches, img_matches, Scalar::all(-1), Scalar::all(-1),
+                //     std::vector<char>(), DrawMatchesFlags::NOT_DRAW_SINGLE_POINTS);
+                // cv::imshow("matches", img_matches);
+                // cv::waitKey();
+                
+                for(size_t i = 0; i < CurrGoodMatches.size(); i++)
                 {
-                    PrevPts.push_back(init_keypoints[PrevGoodMatches[i].queryIdx].pt);
-                    CurrPts.push_back(keypoints[PrevGoodMatches[i].trainIdx].pt);
+                    PrevPts.push_back(PrevKeypoints[CurrGoodMatches[i].queryIdx].pt);
+                    CurrPts.push_back(CurrKeypoints[CurrGoodMatches[i].trainIdx].pt);
                 } 
 
                 cv::triangulatePoints(P0, P1, PrevPts, CurrPts, X);
@@ -439,7 +447,6 @@ std::cout << " Total Landmark's num : " << map_storage.world_xyz.size() << std::
 
                 // new feature to track
                 std::cout << " New Track Feature " << endl;
-                current_track_point_for_triangulate.clear();
                 cv::goodFeaturesToTrack(current_image.frame, CurrTrackPts, max_keypoint, 0.01, 10);
                 PrevTriangulateTrackPts = CurrTrackPts;
 std::cout << " New Track feature num  : " << PrevTriangulateTrackPts.size() << endl; 
@@ -532,8 +539,13 @@ std::cout << " New Track feature num  : " << PrevTriangulateTrackPts.size() << e
                 // project_mat.convertTo(project_mat, CV_32F);
                 // cv::projectPoints(project_mat, R_, t_, K, cv::noArray(), projectionpoints);                
 
-
-
+                PrevGoodMatches.clear();
+                PrevKeypoints.clear();
+                
+                PrevGoodMatches = CurrGoodMatches;
+                PrevKeypoints = CurrKeypoints;
+                PrevDescriptors = CurrDescriptors;
+                PrevMask = CurrMask;
             }
         
         
@@ -554,7 +566,7 @@ std::cout << " New Track feature num  : " << PrevTriangulateTrackPts.size() << e
 //////////////////////////////////////////////////// Track for SolvePnP //////////////////////////////////////////////            
             
             // Matching prev_image and current_image using optical flow
-std::cout << " before PnP track point num  : " << CurrPnPTrackPts.size() << std::endl;  
+std::cout << " before PnP track point num  : " << PrevPnPTrackPts.size() << std::endl;  
             track_opticalflow_and_remove_err_for_SolvePnP(previous_image.frame, current_image.frame, PrevPnPTrackPts, CurrPnPTrackPts, MPforTrack);
             PrevPnPTrackPts = CurrPnPTrackPts;
             
@@ -656,15 +668,16 @@ std::cout << " Rotation difference : " << rotation_difference << endl;
             
             if (new_keyframe_selection)
             {
+                keyframe_num++;
 
-//                 glClear(GL_COLOR_BUFFER_BIT);
+                glClear(GL_COLOR_BUFFER_BIT);
 
                 
                 // Caculate projection matrix for triangulation
                 std::cout << "  projection matrix    " << endl;
-                std::cout << "P0 campose : " << std::endl << vec6d_to_homogenous_campose(map_storage.keyframe[keyframe_num].cam_pose) << endl;
+                std::cout << "P0 campose : " << std::endl << vec6d_to_homogenous_campose(map_storage.keyframe[keyframe_num - 1].cam_pose) << endl;
                 std::cout << "P1 campose : " << std::endl << vec6d_to_homogenous_campose(current_image.cam_pose) << endl;
-                P0 = K * cam_storage_to_projection_matrix(map_storage.keyframe[keyframe_num].cam_pose);
+                P0 = K * cam_storage_to_projection_matrix(map_storage.keyframe[keyframe_num - 1].cam_pose);
                 P1 = K * cam_storage_to_projection_matrix(current_image.cam_pose);
                     
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -690,47 +703,53 @@ std::cout << " TrackMP size after remove back outlier : " <<  MPforTrack.size() 
                 cv::solvePnPRansac(MPforTrack, CurrTrackPts, K, cv::noArray(), rot, tran, false, 100, SolvePnP_reprojection_error, 0.99, inliers );
                 int BeforeRemovePnPOutlierNum = CurrTrackPts.size();
                 RemovePnPOutlier(MPforTrack, CurrTrackPts, inliers);
+std::cout << " TrackMP size after remove SolvePnP outlier : " <<  MPforTrack.size() << endl;               
+
 std::cout << keyframe_num << "  keyframe Track PnP Inlier rate : " << 100 * inliers.rows / BeforeRemovePnPOutlierNum << endl;
 
-
+                PrevPnPTrackPts = CurrTrackPts;
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////       Triangulate for Map  /////////////////////////////////////////////////////////////
                 
-                /// fixfixfixfix here
                 
                 // Extract ORB Feature for Map 
-                keyframe_num++;
-                cv::Ptr<cv::ORB> orb = cv::ORB::create(1000);
+                cv::Ptr<cv::ORB> orb = cv::ORB::create(4000);
                 std::cout << "Extracting ORB features in " << keyframe_num << " keyframe " << std::endl;
 
-                std::vector<cv::KeyPoint> keypoints;
-                cv::Mat descriptors, mask;
+
                 features.clear();
-                orb->detectAndCompute(current_image.frame, mask, keypoints, descriptors);
+                orb->detectAndCompute(current_image.frame, CurrMask, CurrKeypoints, CurrDescriptors);
                 features.push_back(vector<cv::Mat >());
-                changeStructure(descriptors, features.back());
+                changeStructure(CurrDescriptors, features.back());
                 
                 // map_storage.LoopDescriptor.insert(std::pair<int, cv::Mat>(keyframe_num, descriptors));
                 // map_storage.LoopKeyPoint.insert(std::pair<int, std::vector<cv::KeyPoint>>(keyframe_num, keypoints));
 
-                cv::Mat KeypointImg;
-                cv::drawKeypoints(current_image.frame, keypoints, KeypointImg, cv::Scalar(0, 0, 255));
-                cv::imshow("KeypointImg", KeypointImg);
+
                 db.add(features[0]);
                 
                 // Matching ORB Feature 
                 cv::Ptr<DescriptorMatcher> matcher = cv::BFMatcher::create(NORM_HAMMING);
                 std::vector<cv::DMatch> matches;
-                matcher -> match(init_descriptors, descriptors, matches);
+                matcher -> match(PrevDescriptors, CurrDescriptors, matches);
                 std::sort(matches.begin(), matches.end());
                 std::vector<cv::DMatch> good_matches(matches.begin(), matches.begin() + 300);
-                PrevGoodMatches.clear();
-                PrevGoodMatches = good_matches;
+                CurrGoodMatches.clear();
+                CurrGoodMatches = good_matches;
+                PrevPts.clear();
+                CurrPts.clear();
 
-                for(size_t i = 0; i < PrevGoodMatches.size(); i++)
+                // cv::Mat img_matches;
+                // cv::drawMatches(map_storage.keyframe[keyframe_num - 1].frame, PrevKeypoints, current_image.frame, CurrKeypoints,
+                //     CurrGoodMatches, img_matches, Scalar::all(-1), Scalar::all(-1),
+                //     std::vector<char>(), DrawMatchesFlags::NOT_DRAW_SINGLE_POINTS);
+                // cv::imshow("matches", img_matches);
+                // cv::waitKey();
+
+                for(size_t i = 0; i < CurrGoodMatches.size(); i++)
                 {
-                    PrevPts.push_back(init_keypoints[PrevGoodMatches[i].queryIdx].pt);
-                    CurrPts.push_back(keypoints[PrevGoodMatches[i].trainIdx].pt);
+                    PrevPts.push_back(PrevKeypoints[CurrGoodMatches[i].queryIdx].pt);
+                    CurrPts.push_back(CurrKeypoints[CurrGoodMatches[i].trainIdx].pt);
                 } 
 
                 cv::triangulatePoints(P0, P1, PrevPts, CurrPts, X);
@@ -745,17 +764,54 @@ std::cout << keyframe_num << "  keyframe Track PnP Inlier rate : " << 100 * inli
 
                 // Remove MP Outlier ( remove back MP ? and PnP outlier )
 std::cout << " MP size before remove outlier : " <<  CurrMP.size() << endl;
-                remove_map_point_and_2dpoint_outlier(CurrMP,  CurrPts, clone_CurrCamPose);
+                remove_map_point_and_2dpoint_outlier(CurrMP,  CurrPts, vec6d_to_homogenous_campose(current_image.cam_pose));
 std::cout << " MP size after remove back outlier : " <<  CurrMP.size() << endl;               
 
                 
                 cv::solvePnPRansac(CurrMP, CurrPts, K, cv::noArray(), rot, tran, false, 100, SolvePnP_reprojection_error, 0.99, inliers );
                 BeforeRemovePnPOutlierNum = CurrPts.size();
                 RemovePnPOutlier(CurrMP, CurrPts, inliers);
-std::cout << keyframe_num << "  keyframe Track PnP Inlier rate : " << 100 * inliers.rows / BeforeRemovePnPOutlierNum << endl;                
+std::cout << " MP size after remove SolvePnP outlier : " <<  CurrMP.size() << endl;               
+
+std::cout << keyframe_num << "  keyframe MP PnP Inlier rate : " << 100 * inliers.rows / BeforeRemovePnPOutlierNum << endl;                
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////                
+
+                // Storage pts, pts_id, lankmark
+                for(int i = 0; i < CurrPts.size(); i++) 
+                {
+                    map_storage.world_xyz.insert(std::pair<int, cv::Point3d>(feature_max_ID, CurrMP[i]));
+                    current_image.pts_id.push_back(feature_max_ID);
+                    feature_max_ID++;
+                }    
+                std::cout << std::endl;
+                for(int i = 0; i < CurrPts.size(); i++) current_image.pts.push_back(CurrPts[i]);
+
+                
+                // Storage current image 
+                Frame copy_current_image = current_image;
+                frame_storage.push_back(copy_current_image);
+
+                // storage id - keyframe
+                map_storage.keyframe.insert(std::pair<int, Frame>(keyframe_num, frame_storage[times]));
+cv::imshow(" keyframe image ", map_storage.keyframe[keyframe_num].frame);
+std::cout << "@@@@@@@@@@ First keyframe selection @@@@@@@" << std::endl 
+<< " keyframe num is  : " << keyframe_num << endl;                    
+
+
+     
+                // MapToKF_ids
+                for(int i = 0; i < map_storage.keyframe[keyframe_num].pts_id.size(); i++)
+                {
+                    int id = map_storage.keyframe[keyframe_num].pts_id[i];
+                    map_storage.MapToKF_ids[id].push_back(keyframe_num);
+                }
+
+std::cout << " Total Landmark's num : " << map_storage.world_xyz.size() << std::endl;
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 
 //                 // storage landmark id
 //                 std::vector<cv::Point2f> clone_current_track_point_for_triangulate(current_track_point_for_triangulate);
@@ -1216,12 +1272,12 @@ std::cout << keyframe_num << "  keyframe Track PnP Inlier rate : " << 100 * inli
 // //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////                
                 
-//                 // new feature to track
-//                 std::cout << " new feature " << endl;
-//                 current_track_point_for_triangulate.clear();
-//                 cv::goodFeaturesToTrack(current_image.frame, current_track_point_for_triangulate, max_keypoint, 0.01, 8);
-// std::cout << " new feature num  : " << current_track_point_for_triangulate.size() << endl; 
-//                 track_entire_num = current_track_point_for_triangulate.size();
+                // new feature to track
+                std::cout << " New Track Feature " << endl;
+                cv::goodFeaturesToTrack(current_image.frame, CurrTrackPts, max_keypoint, 0.01, 10);
+                PrevTriangulateTrackPts = CurrTrackPts;
+std::cout << " New Track feature num  : " << PrevTriangulateTrackPts.size() << endl; 
+                track_entire_num = PrevTriangulateTrackPts.size();
                     
 //                 keyframe_track_point.clear();
 //                 for(int i = 0; i < current_track_point_for_triangulate.size(); i++) keyframe_track_point.push_back(current_track_point_for_triangulate[i]);            
@@ -1266,6 +1322,14 @@ std::cout << keyframe_num << "  keyframe Track PnP Inlier rate : " << 100 * inli
 // std::cout << "total new feature : " << current_track_point_for_triangulate.size() << endl;
 // std::cout << " same point :  " << same_point_num << " different point num  : " << different_point_num << endl;
 
+                PrevGoodMatches.clear();
+                PrevKeypoints.clear();
+
+
+                PrevGoodMatches = CurrGoodMatches;
+                PrevKeypoints = CurrKeypoints;
+                PrevDescriptors = CurrDescriptors;
+                PrevMask = CurrMask;
             }
 
 //             previous_track_point_for_triangulate.clear();
@@ -1332,9 +1396,9 @@ std::cout << keyframe_num << "  keyframe Track PnP Inlier rate : " << 100 * inli
 
 
 
-//         // show camera estimate pose trajectory keyframe after ba ( blue triangle )
-//         if (new_keyframe_selection)
-//         { 
+        // show camera estimate pose trajectory keyframe after ba ( blue triangle )
+        if (new_keyframe_selection)
+        { 
                
 
 
@@ -1348,12 +1412,21 @@ std::cout << keyframe_num << "  keyframe Track PnP Inlier rate : " << 100 * inli
 //                 cv::Mat rb_t_ = homogenous_campose_for_keyframe_visualize(campose_vec6d_to_mat_for_visualize, 8.0);
 //                 show_trajectory_keyframe(rb_t_, 0.0, 1.0, 0.0, 1.0);
 //                 if(fix_keyframe_parms - fix_keyframe_num == fix_keyframe_num) fix_keyframe_parms++;
-//         }
+            for(int i = 0; i < keyframe_num; i++)
+            {
+                cv::Mat campose_vec6d_to_mat_for_visualize = vec6d_to_homogenous_campose(map_storage.keyframe[i].cam_pose);
+                cv::Mat rb_t_ = homogenous_campose_for_keyframe_visualize(campose_vec6d_to_mat_for_visualize, 8.0); // size
+                show_trajectory_keyframe(rb_t_, 0.0, 0.0, 1.0, 1.0);
+            }
+            cv::Mat campose_vec6d_to_mat_for_visualize = vec6d_to_homogenous_campose(map_storage.keyframe[keyframe_num].cam_pose);
+            cv::Mat rb_t_ = homogenous_campose_for_keyframe_visualize(campose_vec6d_to_mat_for_visualize, 8.0);
+            show_trajectory_keyframe(rb_t_, 0.0, 1.0, 0.0, 1.0);
+        }
     
 
 //         // Show 3d keyframe map point ( black dot )
-//         if (times == initialize_frame_num)
-//         {
+        if (times == initialize_frame_num)
+        {
 //             for( int i = 0 ; i < map_storage.keyframe[0].pts_id.size(); i++)
 //             {
 //                 int show_map_id = map_storage.keyframe[0].pts_id[i];
@@ -1362,12 +1435,18 @@ std::cout << keyframe_num << "  keyframe Track PnP Inlier rate : " << 100 * inli
 //                 show_map_point_parms = map_storage.world_xyz.size();
 //             }  
 //             show_map_point_parms = map_storage.world_xyz.size();
-// std::cout << " map_storage size is : " << map_storage.world_xyz.size() << endl;      
-//         }
+// std::cout << " map_storage size is : " << map_storage.world_xyz.size() << endl;    
+            for(int i = 0 ; i < map_storage.world_xyz.size(); i++)
+            {
+                GLdouble X_map(map_storage.world_xyz[i].x), Y_map(map_storage.world_xyz[i].y), Z_map(map_storage.world_xyz[i].z);
+                show_trajectory(X_map, Y_map, Z_map, 0.0, 0.0, 0.0, 0.01);            
+            }   
+        }
+            
 
-//         // storage inlier map point 
-//         if (new_keyframe_selection)
-//         { 
+        // storage inlier map point 
+        if (new_keyframe_selection)
+        { 
 //             inlier_map_storage.clear();
 //             map_storage.InlierID.clear();
 //             for(int j = 0; j < keyframe_num + 1; j ++)
@@ -1385,11 +1464,15 @@ std::cout << keyframe_num << "  keyframe Track PnP Inlier rate : " << 100 * inli
 //                 GLdouble X_map(inlier_map_storage[i].x), Y_map(inlier_map_storage[i].y), Z_map(inlier_map_storage[i].z);
 //                 show_trajectory(X_map, Y_map, Z_map, 0.0, 0.0, 0.0, 0.01);            
 //             }
-            
-//         }
+            for(int i = 0 ; i < map_storage.world_xyz.size(); i++)
+            {
+                GLdouble X_map(map_storage.world_xyz[i].x), Y_map(map_storage.world_xyz[i].y), Z_map(map_storage.world_xyz[i].z);
+                show_trajectory(X_map, Y_map, Z_map, 0.0, 0.0, 0.0, 0.01);            
+            }  
+        }
 
 
-//         glFlush();
+        glFlush();
 
 //         // glClearColor(1.0,1.0,1.0, 1.0);
         if (new_keyframe_selection) new_keyframe_selection = false;
@@ -1404,8 +1487,8 @@ std::cout << keyframe_num << "  keyframe Track PnP Inlier rate : " << 100 * inli
 
         cv::imshow("currentimage", current_image.frame);
 
-        previous_image = current_image;
         PrevTrackPts = CurrTrackPts;
+        previous_image = current_image;
         ++times;
         
         // double fps = video.set(CAP_PROP_FPS, 30);
@@ -1416,7 +1499,7 @@ std::cout << keyframe_num << "  keyframe Track PnP Inlier rate : " << 100 * inli
         if(want_frame_num) if(times > go_to_frame_num) cv::waitKey(); 
     }
 std::cout << " Finish SLAM " << endl;    
-    
+    cv::waitKey();
     sort(map_storage.InlierID.begin(), map_storage.InlierID.end());
     map_storage.InlierID.erase(unique(map_storage.InlierID.begin(),map_storage.InlierID.end()),map_storage.InlierID.end());
     

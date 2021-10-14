@@ -20,7 +20,7 @@ class Map
         std::map< int, std::vector<cv::KeyPoint> > LoopKeyPoint;
         std::map< int, std::vector<cv::Point2f> > LoopPoint2f;
         std::map< int, cv::Mat> LoopDescriptor;
-        std::map< int, cv::Point3d> LoopMap;
+        // std::map< int, cv::Point3d> LoopMap;
 
         Map()
         {}
@@ -44,7 +44,7 @@ class Map
             InlierMap = tc.InlierMap;
             InlierID = tc.InlierID;
             CompressionMap = tc.CompressionMap;
-            LoopMap = tc.LoopMap;
+            // LoopMap = tc.LoopMap;
         }
 
         // void MakeLoopMap(int BeforeNum, int CurrNum, Map MapInfo)
