@@ -160,7 +160,7 @@ void track_opticalflow_and_remove_err(cv::Mat &previous_, cv::Mat &current_, std
 
 }
 
-void track_opticalflow_and_remove_err_for_triangulate(cv::Mat &previous_, cv::Mat &current_, std::vector<cv::Point2f> &previous_pts_, std::vector<cv::Point2f> &current_pts_, std::vector<cv::Point2f> &keyframe_track_point_)
+void TrackOpticalFlowAndRemoveErrForTriangulate(cv::Mat &previous_, cv::Mat &current_, std::vector<cv::Point2f> &previous_pts_, std::vector<cv::Point2f> &current_pts_, std::vector<cv::Point2f> &keyframe_track_point_, std::vector<int>& previous_track_point_for_triangulate_ID_)
 {
     std::vector<uchar> status_;
     cv::Mat err_;
@@ -185,7 +185,7 @@ void track_opticalflow_and_remove_err_for_triangulate(cv::Mat &previous_, cv::Ma
                     
                     previous_pts_.erase ( previous_pts_.begin() + i - indexCorrection);
                     keyframe_track_point_.erase(keyframe_track_point_.begin() + i - indexCorrection);
-                    // previous_track_point_for_triangulate_ID_.erase(previous_track_point_for_triangulate_ID_.begin() + i - indexCorrection);
+                    previous_track_point_for_triangulate_ID_.erase(previous_track_point_for_triangulate_ID_.begin() + i - indexCorrection);
                     current_pts_.erase (current_pts_.begin() + i - indexCorrection);
                     indexCorrection++;
         }
@@ -196,7 +196,42 @@ void track_opticalflow_and_remove_err_for_triangulate(cv::Mat &previous_, cv::Ma
 
 }
 
-void track_opticalflow_and_remove_err_for_triangulate_(cv::Mat &previous_, cv::Mat &current_, std::vector<cv::Point2f> &previous_pts_, std::vector<cv::Point2f> &current_pts_, std::vector<int> &previous_track_point_for_triangulate_ID_, std::vector<cv::Point2f> &keyframe_track_point_)
+void TrackOpticalFlowAndRemoveErrForTriangulate(cv::Mat &previous_, cv::Mat &current_, std::vector<cv::Point2f> &previous_pts_, std::vector<cv::Point2f> &current_pts_, std::vector<cv::Point2f> &keyframe_track_point_)
+{
+    std::vector<uchar> status_;
+    cv::Mat err_;
+    // std::vector<int> correspond_id_;
+
+    current_pts_.clear();
+
+    cv::calcOpticalFlowPyrLK(previous_, current_, previous_pts_, current_pts_, status_, err_);
+
+    const int image_x_size_ = previous_.cols;
+    const int image_y_size_ = previous_.rows;
+
+    // remove err point
+    int indexCorrection = 0;
+
+    for( int i=0; i<status_.size(); i++)
+    {
+        cv::Point2f pt = current_pts_.at(i- indexCorrection);
+        if((pt.x < 0)||(pt.y < 0 )||(pt.x > image_x_size_)||(pt.y > image_y_size_)) status_[i] = 0;
+        if (status_[i] == 0)	
+        {
+                    
+                    previous_pts_.erase ( previous_pts_.begin() + i - indexCorrection);
+                    keyframe_track_point_.erase(keyframe_track_point_.begin() + i - indexCorrection);
+                    current_pts_.erase (current_pts_.begin() + i - indexCorrection);
+                    indexCorrection++;
+        }
+
+    }     
+
+
+
+}
+
+void TrackOpticalFlowAndRemoveErrForTriangulate(cv::Mat &previous_, cv::Mat &current_, std::vector<cv::Point2f> &previous_pts_, std::vector<cv::Point2f> &current_pts_, std::vector<int> &previous_track_point_for_triangulate_ID_, std::vector<cv::Point2f> &keyframe_track_point_)
 {
     std::vector<uchar> status_;
     cv::Mat err_;
@@ -353,7 +388,7 @@ void track_opticalflow_and_remove_err_for_SolvePnP_noid(cv::Mat &previous_, cv::
 
 }
 
-void remove_map_point_and_2dpoint_outlier (std::vector<cv::Point3d> &map_point_, std::vector<cv::Point2f> &current_pts_, cv::Mat current_cam_pose_)
+void RemoveMPOutlier (Map& MP, std::vector<cv::Point3d> &map_point_, std::vector<cv::Point2f> &current_pts_, int Knum, cv::Mat current_cam_pose_)
 {
 
 
@@ -368,8 +403,9 @@ void remove_map_point_and_2dpoint_outlier (std::vector<cv::Point3d> &map_point_,
     // Current camera viewing vector              
     cv::Mat current_viewing_camera  = current_cam_pose_ * initilize_viewing_camera;
     current_viewing_camera.resize(3);
-    cv::Mat current_camera_pose_translation = (cv::Mat_<double>(3, 1) << current_cam_pose_.at<double>(0, 3), current_cam_pose_.at<double>(1, 3), current_cam_pose_.at<double>(2, 3));
-
+    cv::Mat current_camera_pose_translation = (cv::Mat_<double>(3, 1) <<    current_cam_pose_.at<double>(0, 3), 
+                                                                            current_cam_pose_.at<double>(1, 3), 
+                                                                            current_cam_pose_.at<double>(2, 3));
     int indexCorrection = 0;
                 for(int i = 0; i < clone_map_point.size(); i++)
                 {
@@ -382,7 +418,51 @@ void remove_map_point_and_2dpoint_outlier (std::vector<cv::Point3d> &map_point_,
                     cv::Mat vector_map_point = (cv::Mat_<double>(3, 1) << clone_map_point_Mat.at<double>(i, 0), clone_map_point_Mat.at<double>(i, 1), clone_map_point_Mat.at<double>(i, 2));
 // std::cout << vector_map_point.dot(vector_map_point) << std::endl;      
             //  or vector_map_point.dot(vector_map_point) > 30000 
-                    if(current_viewing_camera.dot(vector_map_point) < 0 or vector_map_point.dot(vector_map_point) > 30000)
+                    if(current_viewing_camera.dot(vector_map_point) < 0 or vector_map_point.dot(vector_map_point) > 50000)
+                    {
+                        
+                        map_point_.erase(map_point_.begin() + i - indexCorrection);
+                        current_pts_.erase(current_pts_.begin() + i - indexCorrection);
+                        MP.MapMatchIdx[Knum].erase(MP.MapMatchIdx[Knum].begin() + i - indexCorrection);
+                        indexCorrection++;
+                    
+                    }
+                
+                }               
+                    
+}
+
+void RemoveMPOutlier (std::vector<cv::Point3d> &map_point_, std::vector<cv::Point2f> &current_pts_, cv::Mat current_cam_pose_)
+{
+
+
+    // Intial camera viewing vector
+    cv::Mat initilize_viewing_camera = (cv::Mat_<double>(4, 1) << 0, 0, 1, 0);
+    
+    // Map point type change ( std::vector<cv::Point3d> -> N*3 Mat channel 1 )
+    std::vector<cv::Point3d> clone_map_point(map_point_);
+    // for(int i = 0; i < map_point_.size(); i++) clone_map_point.push_back(map_point_[i]);
+    cv::Mat clone_map_point_Mat = cv::Mat(clone_map_point).reshape(1);   
+
+    // Current camera viewing vector              
+    cv::Mat current_viewing_camera  = current_cam_pose_ * initilize_viewing_camera;
+    current_viewing_camera.resize(3);
+    cv::Mat current_camera_pose_translation = (cv::Mat_<double>(3, 1) <<    current_cam_pose_.at<double>(0, 3), 
+                                                                            current_cam_pose_.at<double>(1, 3), 
+                                                                            current_cam_pose_.at<double>(2, 3));
+    int indexCorrection = 0;
+                for(int i = 0; i < clone_map_point.size(); i++)
+                {
+
+                    
+                    clone_map_point_Mat.at<double>(i, 0) -= current_camera_pose_translation.at<double>(0, 0);
+                    clone_map_point_Mat.at<double>(i, 1) -= current_camera_pose_translation.at<double>(1, 0);
+                    clone_map_point_Mat.at<double>(i, 2) -= current_camera_pose_translation.at<double>(2, 0);
+                    
+                    cv::Mat vector_map_point = (cv::Mat_<double>(3, 1) << clone_map_point_Mat.at<double>(i, 0), clone_map_point_Mat.at<double>(i, 1), clone_map_point_Mat.at<double>(i, 2));
+// std::cout << vector_map_point.dot(vector_map_point) << std::endl;      
+            //  or vector_map_point.dot(vector_map_point) > 30000 
+                    if(current_viewing_camera.dot(vector_map_point) < 0 or vector_map_point.dot(vector_map_point) > 50000)
                     {
                         
                         map_point_.erase(map_point_.begin() + i - indexCorrection);
@@ -395,8 +475,94 @@ void remove_map_point_and_2dpoint_outlier (std::vector<cv::Point3d> &map_point_,
                     
 }
 
+void RemoveTrackMPOutlier (Map& MP, std::vector<cv::Point3d> &map_point_, std::vector<cv::Point2f> &current_pts_, int Knum, cv::Mat current_cam_pose_, std::vector<int>& TrackForTriangulatePtsID)
+{
 
-void remove_map_point_and_2dpoint_outlier_(std::vector<cv::Point3d> &map_point_, std::vector<cv::Point2f> &current_pts_, std::vector<int> &previous_track_point_for_triangulate_ID_, cv::Mat current_cam_pose_)
+
+    // Intial camera viewing vector
+    cv::Mat initilize_viewing_camera = (cv::Mat_<double>(4, 1) << 0, 0, 1, 0);
+    
+    // Map point type change ( std::vector<cv::Point3d> -> N*3 Mat channel 1 )
+    std::vector<cv::Point3d> clone_map_point(map_point_);
+    // for(int i = 0; i < map_point_.size(); i++) clone_map_point.push_back(map_point_[i]);
+    cv::Mat clone_map_point_Mat = cv::Mat(clone_map_point).reshape(1);   
+
+    // Current camera viewing vector              
+    cv::Mat current_viewing_camera  = current_cam_pose_ * initilize_viewing_camera;
+    current_viewing_camera.resize(3);
+    cv::Mat current_camera_pose_translation = (cv::Mat_<double>(3, 1) <<    current_cam_pose_.at<double>(0, 3), 
+                                                                            current_cam_pose_.at<double>(1, 3), 
+                                                                            current_cam_pose_.at<double>(2, 3));
+    int indexCorrection = 0;
+                for(int i = 0; i < clone_map_point.size(); i++)
+                {
+
+                    
+                    clone_map_point_Mat.at<double>(i, 0) -= current_camera_pose_translation.at<double>(0, 0);
+                    clone_map_point_Mat.at<double>(i, 1) -= current_camera_pose_translation.at<double>(1, 0);
+                    clone_map_point_Mat.at<double>(i, 2) -= current_camera_pose_translation.at<double>(2, 0);
+                    
+                    cv::Mat vector_map_point = (cv::Mat_<double>(3, 1) << clone_map_point_Mat.at<double>(i, 0), clone_map_point_Mat.at<double>(i, 1), clone_map_point_Mat.at<double>(i, 2));
+// std::cout << vector_map_point.dot(vector_map_point) << std::endl;      
+            //  or vector_map_point.dot(vector_map_point) > 30000 
+                    if(current_viewing_camera.dot(vector_map_point) < 0 or vector_map_point.dot(vector_map_point) > 50000)
+                    {
+                        
+                        map_point_.erase(map_point_.begin() + i - indexCorrection);
+                        current_pts_.erase(current_pts_.begin() + i - indexCorrection);
+                        TrackForTriangulatePtsID.erase(TrackForTriangulatePtsID.begin() + i - indexCorrection);
+                        indexCorrection++;
+                    
+                    }
+                
+                }               
+                    
+}
+
+void RemoveTrackMPOutlier (Map& MP, std::vector<cv::Point3d> &map_point_, std::vector<cv::Point2f> &current_pts_, int Knum, cv::Mat current_cam_pose_  )
+{
+
+
+    // Intial camera viewing vector
+    cv::Mat initilize_viewing_camera = (cv::Mat_<double>(4, 1) << 0, 0, 1, 0);
+    
+    // Map point type change ( std::vector<cv::Point3d> -> N*3 Mat channel 1 )
+    std::vector<cv::Point3d> clone_map_point(map_point_);
+    // for(int i = 0; i < map_point_.size(); i++) clone_map_point.push_back(map_point_[i]);
+    cv::Mat clone_map_point_Mat = cv::Mat(clone_map_point).reshape(1);   
+
+    // Current camera viewing vector              
+    cv::Mat current_viewing_camera  = current_cam_pose_ * initilize_viewing_camera;
+    current_viewing_camera.resize(3);
+    cv::Mat current_camera_pose_translation = (cv::Mat_<double>(3, 1) <<    current_cam_pose_.at<double>(0, 3), 
+                                                                            current_cam_pose_.at<double>(1, 3), 
+                                                                            current_cam_pose_.at<double>(2, 3));
+    int indexCorrection = 0;
+                for(int i = 0; i < clone_map_point.size(); i++)
+                {
+
+                    
+                    clone_map_point_Mat.at<double>(i, 0) -= current_camera_pose_translation.at<double>(0, 0);
+                    clone_map_point_Mat.at<double>(i, 1) -= current_camera_pose_translation.at<double>(1, 0);
+                    clone_map_point_Mat.at<double>(i, 2) -= current_camera_pose_translation.at<double>(2, 0);
+                    
+                    cv::Mat vector_map_point = (cv::Mat_<double>(3, 1) << clone_map_point_Mat.at<double>(i, 0), clone_map_point_Mat.at<double>(i, 1), clone_map_point_Mat.at<double>(i, 2));
+// std::cout << vector_map_point.dot(vector_map_point) << std::endl;      
+            //  or vector_map_point.dot(vector_map_point) > 30000 
+                    if(current_viewing_camera.dot(vector_map_point) < 0 or vector_map_point.dot(vector_map_point) > 50000)
+                    {
+                        
+                        map_point_.erase(map_point_.begin() + i - indexCorrection);
+                        current_pts_.erase(current_pts_.begin() + i - indexCorrection);
+                        indexCorrection++;
+                    
+                    }
+                
+                }               
+                    
+}
+
+void RemoveMPOutlier(std::vector<cv::Point3d> &map_point_, std::vector<cv::Point2f> &current_pts_, std::vector<int> &previous_track_point_for_triangulate_ID_, cv::Mat current_cam_pose_)
 {
 
 
@@ -545,24 +711,167 @@ std::vector<cv::Point2f> KeypointToPoint2f(std::vector<cv::KeyPoint> keypoint)
     {
         pts.push_back(keypoint[i].pt);
     }
+
+    return pts;
 }
     
-void RemovePnPOutlier(std::vector<cv::Point3d>& MP, std::vector<cv::Point2f>& pts, cv::Mat inliers)
+void RemoveMPPnPOutlier(Map& MP, std::vector<cv::Point3d>& map_point, std::vector<cv::Point2f>& pts, cv::Mat inliers, int Knum)
 {
-    std::vector<cv::Point3d> clone_MP;
+    std::vector<cv::Point3d> clone_map_point;
+    std::vector<cv::Point2f> clone_pts;
+    std::vector<int> clone_MapMatchIdx;
+    
+    for(int i = 0; i < inliers.rows; i++)
+    {
+        clone_map_point.push_back(map_point[inliers.at<int>(i, 0)]);
+        clone_pts.push_back(pts[inliers.at<int>(i, 0)]);
+        clone_MapMatchIdx.push_back(MP.MapMatchIdx[Knum][i]);
+    }
+    
+    map_point.clear();
+    pts.clear();
+    MP.MapMatchIdx[Knum].clear();
+
+    map_point = clone_map_point;
+    pts = clone_pts;
+    MP.MapMatchIdx[Knum] = clone_MapMatchIdx;
+}    
+
+void RemoveTrackMPPnPOutlier(std::vector<cv::Point3d>& map_point, std::vector<cv::Point2f>& pts, cv::Mat inliers)
+{
+    std::vector<cv::Point3d> clone_map_point;
     std::vector<cv::Point2f> clone_pts;
     
     for(int i = 0; i < inliers.rows; i++)
     {
-        clone_MP.push_back(MP[inliers.at<int>(i, 0)]);
+        clone_map_point.push_back(map_point[inliers.at<int>(i, 0)]);
         clone_pts.push_back(pts[inliers.at<int>(i, 0)]);
-
     }
     
-    MP.clear();
+    map_point.clear();
     pts.clear();
 
-    MP = clone_MP;
+    map_point = clone_map_point;
     pts = clone_pts;
-}    
 
+
+}
+
+void RemoveTrackMPPnPOutlier(std::vector<cv::Point3d>& map_point, std::vector<cv::Point2f>& pts, cv::Mat inliers, std::vector<int>& TrackForTriangulatePtsID)
+{
+    std::vector<cv::Point3d> clone_map_point;
+    std::vector<cv::Point2f> clone_pts;
+    std::vector<int> clone_TrackForTriangulatePtsID;
+
+    for(int i = 0; i < inliers.rows; i++)
+    {
+        clone_map_point.push_back(map_point[inliers.at<int>(i, 0)]);
+        clone_pts.push_back(pts[inliers.at<int>(i, 0)]);
+        clone_TrackForTriangulatePtsID.push_back(TrackForTriangulatePtsID[inliers.at<int>(i, 0)]);
+    }
+    
+    map_point.clear();
+    pts.clear();
+    TrackForTriangulatePtsID.clear();
+
+    map_point = clone_map_point;
+    pts = clone_pts;
+    TrackForTriangulatePtsID = clone_TrackForTriangulatePtsID;
+
+}
+
+void RemoveEssentialOutlier(Map& MP, std::vector<cv::Point2f>& Prevpts, std::vector<cv::Point2f>& Currpts, int Knum, cv::Mat K)
+{
+    double f = K.at<double>(0, 0);
+    cv::Point2d c(K.at<double>(0, 2), K.at<double>(1, 2));
+    cv::Mat E, inlier_mask;
+    std::vector<cv::Point2f> Clone_Prevpts, Clone_Currpts;
+    E = cv::findEssentialMat(Prevpts, Currpts, f, c, cv::RANSAC, 0.99, 1, inlier_mask);
+
+
+    for(int i = 0; i < inlier_mask.rows; i++)
+    {
+        if(inlier_mask.at<bool>(i, 0) == 1)
+        {
+            Clone_Prevpts.push_back(Prevpts[i]);
+            Clone_Currpts.push_back(Currpts[i]);
+            MP.MapMatchIdx[Knum].push_back(i);
+        }
+    }
+
+    Prevpts.clear();
+    Currpts.clear();
+
+    Prevpts = Clone_Prevpts;
+    Currpts = Clone_Currpts;
+
+}
+
+void RemoveEssentialOutlier_(std::vector<cv::Point2f>& Prevpts, std::vector<cv::Point2f>& Currpts, cv::Mat K, std::vector<cv::DMatch>& matches)
+{
+    double f = K.at<double>(0, 0);
+    cv::Point2d c(K.at<double>(0, 2), K.at<double>(1, 2));
+    cv::Mat E, inlier_mask;
+    std::vector<cv::Point2f> Clone_Prevpts, Clone_Currpts;
+    std::vector<cv::DMatch> Clone_matches;
+    E = cv::findEssentialMat(Prevpts, Currpts, f, c, cv::RANSAC, 0.99, 1, inlier_mask);
+
+
+    for(int i = 0; i < inlier_mask.rows; i++)
+    {
+        if(inlier_mask.at<bool>(i, 0) == 1)
+        {
+            Clone_Prevpts.push_back(Prevpts[i]);
+            Clone_Currpts.push_back(Currpts[i]);
+            Clone_matches.push_back(matches[i]);
+        }
+    }
+
+    Prevpts.clear();
+    Currpts.clear();
+    matches.clear();
+
+    Prevpts = Clone_Prevpts;
+    Currpts = Clone_Currpts;
+    matches = Clone_matches;
+}
+
+std::vector<cv::Point2f> Keypoint2Point2f(std::vector<cv::KeyPoint> keypoint)
+{
+    std::vector<cv::Point2f> point2f;
+    for(int i = 0; i < keypoint.size(); i++)
+    {
+        point2f.push_back(keypoint[i].pt);
+
+    }
+
+    return point2f;
+}
+
+std::vector<cv::KeyPoint> Point2f2Keypoint(std::vector<cv::Point2f> point2f)
+{
+    std::vector<cv::KeyPoint> keypoint;
+     
+    for(int i = 0; i < point2f.size(); i++)
+    {
+
+        keypoint.push_back(cv::KeyPoint(point2f[i], 1.f));
+
+    }
+
+    return keypoint;
+}
+
+void GoodMatch(Map& MP, int Knum, int num)
+{
+    std::vector<int> Clone_MapMatchIdx;
+    if(MP.MapMatchIdx[Knum].size() < num) num = MP.MapMatchIdx[Knum].size();
+    for(int i = 0; i < num; i++)
+    {
+        Clone_MapMatchIdx.push_back(MP.MapMatchIdx[Knum][i]);
+    }
+
+    MP.MapMatchIdx[Knum].clear();
+    MP.MapMatchIdx[Knum] = Clone_MapMatchIdx;
+
+}

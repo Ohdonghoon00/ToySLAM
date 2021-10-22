@@ -157,7 +157,8 @@ int inlier_ratio = 100 * inliers.rows / loopframe_inlier_3dpoint.size();
 }
 
 
-double VerifyLoop(int loop_edge_id, int curr_id, Map MapST, cv::Mat K_, cv::Mat& relpose)
+double 
+VerifyLoop(int loop_edge_id, int curr_id, Map MapST, cv::Mat K_, cv::Mat& relpose)
 {
     Eigen::Vector3d curr_pose, loop_pose;
     std::vector<Eigen::Vector3d> loopframe_inlier_3dpoint_;

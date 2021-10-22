@@ -39,10 +39,12 @@ cv::Mat cam_storage_to_projection_matrix(cv::Vec6d cam_storage);
 void track_opticalflow_and_remove_err(cv::Mat &previous_, cv::Mat &current_, std::vector<cv::Point2f> &previous_pts_, std::vector<cv::Point2f> &current_pts_);
 
 
-void track_opticalflow_and_remove_err_for_triangulate(cv::Mat &previous_, cv::Mat &current_, std::vector<cv::Point2f> &previous_pts_, std::vector<cv::Point2f> &current_pts_, std::vector<cv::Point2f> &keyframe_track_point_);
+void TrackOpticalFlowAndRemoveErrForTriangulate(cv::Mat &previous_, cv::Mat &current_, std::vector<cv::Point2f> &previous_pts_, std::vector<cv::Point2f> &current_pts_, std::vector<cv::Point2f> &keyframe_track_point_, std::vector<int>& previous_track_point_for_triangulate_ID_);
+void TrackOpticalFlowAndRemoveErrForTriangulate(cv::Mat &previous_, cv::Mat &current_, std::vector<cv::Point2f> &previous_pts_, std::vector<cv::Point2f> &current_pts_, std::vector<cv::Point2f> &keyframe_track_point_);
+void TrackOpticalFlowAndRemoveErrForTriangulate(cv::Mat &previous_, cv::Mat &current_, std::vector<cv::Point2f> &previous_pts_, std::vector<cv::Point2f> &current_pts_, std::vector<int> &previous_track_point_for_triangulate_ID_, std::vector<cv::Point2f> &keyframe_track_point_);
 
 
-void track_opticalflow_and_remove_err_for_triangulate_(cv::Mat &previous_, cv::Mat &current_, std::vector<cv::Point2f> &previous_pts_, std::vector<cv::Point2f> &current_pts_, std::vector<int> &previous_track_point_for_triangulate_ID_, std::vector<cv::Point2f> &keyframe_track_point_);
+// void track_opticalflow_and_remove_err_for_triangulate_(cv::Mat &previous_, cv::Mat &current_, std::vector<cv::Point2f> &previous_pts_, std::vector<cv::Point2f> &current_pts_, std::vector<int> &previous_track_point_for_triangulate_ID_, std::vector<cv::Point2f> &keyframe_track_point_);
 
 
 void track_opticalflow_and_remove_err_for_SolvePnP_(cv::Mat &previous_, cv::Mat &current_, std::vector<cv::Point2f> &previous_pts_, std::vector<cv::Point2f> &current_pts_, std::vector<int> &previous_pts_id_, std::vector<cv::Point3d> &map_point_);
@@ -53,7 +55,13 @@ void track_opticalflow_and_remove_err_for_SolvePnP(cv::Mat &previous_, cv::Mat &
 void track_opticalflow_and_remove_err_for_SolvePnP_noid(cv::Mat &previous_, cv::Mat &current_, std::vector<cv::Point2f> &previous_pts_, std::vector<cv::Point2f> &current_pts_, std::vector<cv::Point3d> &map_point_);
 
 
-void remove_map_point_and_2dpoint_outlier (std::vector<cv::Point3d> &map_point_, std::vector<cv::Point2f> &current_pts_, cv::Mat current_cam_pose_);
+void RemoveMPOutlier (Map& MP, std::vector<cv::Point3d> &map_point_, std::vector<cv::Point2f> &current_pts_, int Knum, cv::Mat current_cam_pose_);
+void RemoveMPOutlier (std::vector<cv::Point3d> &map_point_, std::vector<cv::Point2f> &current_pts_, cv::Mat current_cam_pose_);
+void RemoveMPOutlier(std::vector<cv::Point3d> &map_point_, std::vector<cv::Point2f> &current_pts_, std::vector<int> &previous_track_point_for_triangulate_ID_, cv::Mat current_cam_pose_);
+
+
+void RemoveTrackMPOutlier (Map& MP, std::vector<cv::Point3d> &map_point_, std::vector<cv::Point2f> &current_pts_, int Knum, cv::Mat current_cam_pose_, std::vector<int>& TrackForTriangulatePtsID);
+void RemoveTrackMPOutlier (Map& MP, std::vector<cv::Point3d> &map_point_, std::vector<cv::Point2f> &current_pts_, int Knum, cv::Mat current_cam_pose_  );
 
 
 void remove_map_point_and_2dpoint_outlier_(std::vector<cv::Point3d> &map_point_, std::vector<cv::Point2f> &current_pts_, std::vector<int> &previous_track_point_for_triangulate_ID_, cv::Mat current_cam_pose_);
@@ -81,4 +89,18 @@ Eigen::Quaterniond getQuaternionFromRotationMatrix(const Eigen::Matrix3d& mat);
 
 std::vector<cv::Point2f> KeypointToPoint2f(std::vector<cv::KeyPoint> keypoint);
 
-void RemovePnPOutlier(std::vector<cv::Point3d>& MP, std::vector<cv::Point2f>& pts, cv::Mat inliers);
+void RemoveMPPnPOutlier(Map& MP, std::vector<cv::Point3d>& map_point, std::vector<cv::Point2f>& pts, cv::Mat inliers, int Knum);
+
+void RemoveTrackMPPnPOutlier(std::vector<cv::Point3d>& map_point, std::vector<cv::Point2f>& pts, cv::Mat inliers);
+void RemoveTrackMPPnPOutlier(std::vector<cv::Point3d>& map_point, std::vector<cv::Point2f>& pts, cv::Mat inliers, std::vector<int>& TrackForTriangulatePtsID);
+
+
+void RemoveEssentialOutlier(Map& MP, std::vector<cv::Point2f>& Prevpts, std::vector<cv::Point2f>& Currpts, int Knum, cv::Mat K);
+
+void RemoveEssentialOutlier_(std::vector<cv::Point2f>& Prevpts, std::vector<cv::Point2f>& Currpts, cv::Mat K, std::vector<cv::DMatch>& matches);
+
+std::vector<cv::Point2f> Keypoint2Point2f(std::vector<cv::KeyPoint> keypoint);
+
+std::vector<cv::KeyPoint> Point2f2Keypoint(std::vector<cv::Point2f> point2f);
+
+void GoodMatch(Map& MP, int Knum, int num);

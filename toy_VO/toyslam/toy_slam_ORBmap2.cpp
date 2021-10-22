@@ -66,9 +66,10 @@ int main(int argc, char **argv)
 //////////////////////////////////        Parameter       /////////////////////////////////////////////////////////////////////          
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////    
     
-    int max_keypoint = 1000;        // max feature detection number
+    int max_keypoint = 1500;        // max feature detection number
     int initialize_frame_num = 5;   // number of 5 point algorithm ( Essential Matrix ) 
     float SolvePnP_reprojection_error = 3.0F;
+    int SolevePnPFlags = 0;
 
     // Keyframe Selection
     // int KS_track_overlap_ratio= 65;
@@ -76,7 +77,7 @@ int main(int argc, char **argv)
     // double KS_yaw_difference = 100; // 0.055
     
     // Local BA 
-    int fix_keyframe_num = 10;
+    int fix_keyframe_num = 3;
     int active_keyframe_num = 3;
 
     // show image delay
@@ -93,6 +94,7 @@ int main(int argc, char **argv)
     int track_entire_num;    
     int track_overlap_ratio;
     int feature_max_ID = 0;
+    int TrackFeatureMaxID = 0;
     bool new_keyframe_selection = false;
     bool caculate_triangulation = true;
     int show_map_point_parms = 0;
@@ -117,6 +119,7 @@ int main(int argc, char **argv)
     // parameter for track
     std::vector<cv::Point2f> PrevTrackPts, CurrTrackPts, PrevTriangulateTrackPts, CurrTriangulateTrackPts, PrevPnPTrackPts, CurrPnPTrackPts;
     std::vector<Point3d> MPforTrack;
+    std::vector<int> TrackForTriangulatePtsID;
 
     
     cv::Mat World_R, World_t, World_Rt;
@@ -124,7 +127,6 @@ int main(int argc, char **argv)
     
     cv::Mat X, map_change;
     std::vector<cv::Point2f> previous_track_point_for_triangulate, current_track_point_for_triangulate, keyframe_track_point;
-    std::vector<int> previous_track_point_for_triangulate_ID;
     std::vector<cv::Point3d> SolvePnP_tracking_map;
     std::vector<int> SolvePnP_tracking_map_ID;
     std::vector<double> vec_scale;
@@ -245,7 +247,7 @@ std::cout << " Init Extract track point num  : " << PrevTrackPts.size() << endl;
             
             
             // Matching Feature using 2d view for CamPose   
-            track_opticalflow_and_remove_err_for_triangulate(previous_image.frame, current_image.frame, PrevTrackPts, CurrTrackPts, PrevTriangulateTrackPts);
+            TrackOpticalFlowAndRemoveErrForTriangulate(previous_image.frame, current_image.frame, PrevTrackPts, CurrTrackPts, PrevTriangulateTrackPts);
 std::cout << "After Matching track point num  : " << CurrTrackPts.size() << endl;            
             
             
@@ -299,20 +301,32 @@ std::cout << " current cam pose " << std::endl << clone_CurrCamPose << std::endl
                 
                 // Remove trackMP Outlier ( remove back MP ? and PnP outlier )
 std::cout << " TrackMP size before remove outlier : " <<  MPforTrack.size() << endl;
-                remove_map_point_and_2dpoint_outlier(MPforTrack,  CurrTrackPts, vec6d_to_homogenous_campose(current_image.cam_pose));
+                RemoveTrackMPOutlier(map_storage, MPforTrack,  CurrTrackPts, keyframe_num, vec6d_to_homogenous_campose(current_image.cam_pose));
 std::cout << " TrackMP size after remove back outlier : " <<  MPforTrack.size() << endl;               
 
-                cv::Mat rot, tran, inliers;
-                cv::solvePnPRansac(MPforTrack, CurrTrackPts, K, cv::noArray(), rot, tran, false, 100, SolvePnP_reprojection_error, 0.99, inliers );
+                cv::Mat rot, tran, rottran, inliers;
+                cv::solvePnPRansac(MPforTrack, CurrTrackPts, K, cv::noArray(), rot, tran, false, 100, SolvePnP_reprojection_error, 0.99, inliers, SolevePnPFlags );
                 int BeforeRemovePnPOutlierNum = CurrTrackPts.size();
-                RemovePnPOutlier(MPforTrack, CurrTrackPts, inliers);
+                RemoveTrackMPPnPOutlier(MPforTrack, CurrTrackPts, inliers);
 std::cout << keyframe_num << "  keyframe Track PnP Inlier rate : " << 100 * inliers.rows / BeforeRemovePnPOutlierNum << endl;
-
+                cv::Rodrigues(rot, rot);
+                rottran = R_t_to_homogenous(rot, tran);
+std::cout << " SolvePnP Track outlier Test pose : " << std::endl << rottran.inv() << std::endl;
+                
                 PrevPnPTrackPts = CurrTrackPts;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// 
-
-
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                
+                // Storage Track Pts,ID
+                current_image.TrackPts.clear();
+                current_image.TrackId.clear();
+                for(int i = 0; i < CurrTrackPts.size(); i++){
+                    current_image.TrackPts.push_back(CurrTrackPts[i]);
+                    current_image.TrackId.push_back(TrackFeatureMaxID);
+                    map_storage.TrackMP.insert(std::pair<int, cv::Point3d>(TrackFeatureMaxID, MPforTrack[i]));
+                    TrackFeatureMaxID++;
+                }
                 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////       Triangulate for Map  /////////////////////////////////////////////////////////////
@@ -338,25 +352,52 @@ std::cout << keyframe_num << "  keyframe Track PnP Inlier rate : " << 100 * inli
                 std::vector<cv::DMatch> matches;
                 matcher -> match(PrevDescriptors, CurrDescriptors, matches);
                 std::sort(matches.begin(), matches.end());
-                std::vector<cv::DMatch> good_matches(matches.begin(), matches.begin() + 300);
-                CurrGoodMatches.clear();
-                CurrGoodMatches = good_matches;
-                
-                // // drawing the results
-                // Mat img_matches;
 
+                CurrGoodMatches.clear();
+                CurrGoodMatches = matches;
+
+std::cout << "During 4000 ,,, Best Distance : " << CurrGoodMatches[0].distance << "     " <<
+                        " Median Distance : " << CurrGoodMatches[2000].distance << "    " <<
+                        " Worst Distance : " << CurrGoodMatches[3990].distance << std::endl;
+
+                for(size_t i = 0; i < matches.size(); i++)
+                {
+                    PrevPts.push_back(PrevKeypoints[matches[i].queryIdx].pt);
+                    CurrPts.push_back(CurrKeypoints[matches[i].trainIdx].pt);
+                } 
+                
+                // Remove Essential Outlier
+                RemoveEssentialOutlier(map_storage, PrevPts, CurrPts, keyframe_num, K);
+
+                // Good Match
+                GoodMatch(map_storage, keyframe_num, 300);
+std::cout << " During remove Essential  ,,, Best Distance : " << CurrGoodMatches[map_storage.MapMatchIdx[keyframe_num][0]].distance << std::endl;
+                PrevPts.clear();
+                CurrPts.clear();
+                for(size_t i = 0; i < map_storage.MapMatchIdx[keyframe_num].size(); i++)
+                {
+                    PrevPts.push_back(PrevKeypoints[matches[map_storage.MapMatchIdx[keyframe_num][i]].queryIdx].pt);
+                    CurrPts.push_back(CurrKeypoints[matches[map_storage.MapMatchIdx[keyframe_num][i]].trainIdx].pt);
+                }                
+
+                // // drawing the results
+                // std::vector<cv::DMatch> DrawMatch;
+                // Mat img_matches;
+                // for(int i = 0; i < map_storage.MapMatchIdx[keyframe_num].size(); i++)
+                // {
+                //     DrawMatch.push_back(matches[map_storage.MapMatchIdx[keyframe_num][i]]);
+                // }
                 
                 // cv::drawMatches(frame_storage[0].frame, PrevKeypoints, current_image.frame, CurrKeypoints,
-                //     CurrGoodMatches, img_matches, Scalar::all(-1), Scalar::all(-1),
+                //     DrawMatch, img_matches, Scalar::all(-1), Scalar::all(-1),
                 //     std::vector<char>(), DrawMatchesFlags::NOT_DRAW_SINGLE_POINTS);
                 // cv::imshow("matches", img_matches);
                 // cv::waitKey();
+
                 
-                for(size_t i = 0; i < CurrGoodMatches.size(); i++)
-                {
-                    PrevPts.push_back(PrevKeypoints[CurrGoodMatches[i].queryIdx].pt);
-                    CurrPts.push_back(CurrKeypoints[CurrGoodMatches[i].trainIdx].pt);
-                } 
+                
+
+
 
                 cv::triangulatePoints(P0, P1, PrevPts, CurrPts, X);
                 world_xyz_point_to_homogenous(X);
@@ -370,14 +411,18 @@ std::cout << keyframe_num << "  keyframe Track PnP Inlier rate : " << 100 * inli
 
                 // Remove MP Outlier ( remove back MP ? and PnP outlier )
 std::cout << " MP size before remove outlier : " <<  CurrMP.size() << endl;
-                remove_map_point_and_2dpoint_outlier(CurrMP,  CurrPts, clone_CurrCamPose);
+                RemoveMPOutlier(map_storage, CurrMP,  CurrPts, keyframe_num, vec6d_to_homogenous_campose(current_image.cam_pose));
 std::cout << " MP size after remove back outlier : " <<  CurrMP.size() << endl;               
 
                 
-                cv::solvePnPRansac(CurrMP, CurrPts, K, cv::noArray(), rot, tran, false, 100, SolvePnP_reprojection_error, 0.99, inliers );
+                cv::solvePnPRansac(CurrMP, CurrPts, K, cv::noArray(), rot, tran, false, 100, SolvePnP_reprojection_error, 0.99, inliers, SolevePnPFlags );
                 BeforeRemovePnPOutlierNum = CurrPts.size();
-                RemovePnPOutlier(CurrMP, CurrPts, inliers);
-std::cout << keyframe_num << "  keyframe Track PnP Inlier rate : " << 100 * inliers.rows / BeforeRemovePnPOutlierNum << endl;
+                RemoveMPPnPOutlier(map_storage, CurrMP, CurrPts, inliers, keyframe_num);
+std::cout << keyframe_num << "th  keyframe Track PnP Inlier rate : " << 100 * inliers.rows / BeforeRemovePnPOutlierNum << endl;
+
+                cv::Rodrigues(rot, rot);
+                rottran = R_t_to_homogenous(rot, tran);
+std::cout << " SolvePnP MP outlier Test pose : " << std::endl << rottran.inv() << std::endl;
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -398,10 +443,10 @@ std::cout << keyframe_num << "  keyframe Track PnP Inlier rate : " << 100 * inli
                 frame_storage.push_back(copy_current_image);
 
                 // storage id - keyframe
-                map_storage.keyframe.insert(std::pair<int, Frame>(keyframe_num, frame_storage[times]));
+                map_storage.keyframe[keyframe_num] = frame_storage[times];
 cv::imshow(" keyframe image ", map_storage.keyframe[keyframe_num].frame);
-std::cout << "@@@@@@@@@@ First keyframe selection @@@@@@@" << std::endl 
-<< " keyframe num is  : " << keyframe_num << endl;                    
+std::cout << "@@@@@@@@@@ First keyframe selection @@@@@@@" << std::endl
+<< " keyframe num is  : " << keyframe_num << std::endl;                    
 
 
      
@@ -448,62 +493,57 @@ std::cout << " Total Landmark's num : " << map_storage.world_xyz.size() << std::
                 // new feature to track
                 std::cout << " New Track Feature " << endl;
                 cv::goodFeaturesToTrack(current_image.frame, CurrTrackPts, max_keypoint, 0.01, 10);
-                PrevTriangulateTrackPts = CurrTrackPts;
+
+                PrevTriangulateTrackPts.clear();
+                PrevTriangulateTrackPts.assign( CurrTrackPts.begin(), CurrTrackPts.end() );
 std::cout << " New Track feature num  : " << PrevTriangulateTrackPts.size() << endl; 
                 track_entire_num = PrevTriangulateTrackPts.size();
                 
-                // keyframe_track_point.clear();
-                // for(int i = 0; i < current_track_point_for_triangulate.size(); i++) keyframe_track_point.push_back(current_track_point_for_triangulate[i]);
+                // Correspondance New Feature
+                TrackForTriangulatePtsID.clear();
+                std::vector<cv::Point2f> clone_pts(current_image.TrackPts);
+                std::vector<int> clone_pts_id(current_image.TrackId);
+                int same_point_num(0), different_point_num(0);
 
-                // previous_track_point_for_triangulate.clear();
-                // for(int i = 0; i < current_track_point_for_triangulate.size(); i++) previous_track_point_for_triangulate.push_back(current_track_point_for_triangulate[i]);
+                for(int j = 0; j < CurrTrackPts.size(); j++)
+                {
+                    bool DifferentPts = true;
+                    for(int i = 0; i < clone_pts.size(); i++)
+                    {
+                        double difference_point2d_x = cv::abs(clone_pts[i].x - CurrTrackPts[j].x);
+                        double difference_point2d_y = cv::abs(clone_pts[i].y - CurrTrackPts[j].y);
 
-//                 std::vector<cv::Point2f> clone_pts(current_image.pts);
-//                 std::vector<int> clone_pts_id(current_image.pts_id);
-//                 int same_point_num(0), different_point_num(0);
-// std::cout << " remain feature num : " << current_image.pts.size() << endl;
-
-//                 for(int j = 0; j < current_track_point_for_triangulate.size(); j++)
-//                 {
-//                     bool found_pts2d = false;
-//                     for(int i = 0; i < clone_pts.size(); i++)
-//                     {
-//                         double difference_point2d_x = cv::abs(clone_pts[i].x - current_track_point_for_triangulate[j].x);
-//                         double difference_point2d_y = cv::abs(clone_pts[i].y - current_track_point_for_triangulate[j].y);
-
-//                         if(difference_point2d_x < 3.0 and difference_point2d_y < 3.0)
-//                         {
-//                             found_pts2d = true;
-//                             previous_track_point_for_triangulate_ID.push_back(clone_pts_id[i]);
-//                             clone_pts.erase(clone_pts.begin() + i);
-//                             clone_pts_id.erase(clone_pts_id.begin() + i);
-//                             same_point_num++;
-//                             break;
-//                         }
-//                     }
+                        if(difference_point2d_x < 3.0 and difference_point2d_y < 3.0)
+                        {
+                            TrackForTriangulatePtsID.push_back(clone_pts_id[i]);
+                            clone_pts.erase(clone_pts.begin() + i);
+                            clone_pts_id.erase(clone_pts_id.begin() + i);
+                            same_point_num++;
+                            DifferentPts = false;
+                            break;
+                        }
+                    }
                     
-//                     if(found_pts2d) found_pts2d= false;
-//                     else
-//                     {
-//                         different_point_num++;
-//                         feature_max_ID++;
-//                         previous_track_point_for_triangulate_ID.push_back(feature_max_ID);
-//                     }
+                    if(DifferentPts)
+                    {
+                        TrackForTriangulatePtsID.push_back(TrackFeatureMaxID);
+                        different_point_num++;
+                        TrackFeatureMaxID++;
+                    }
 
-//                 }
-// std::cout << "total new feature : " << current_track_point_for_triangulate.size() << endl;
-// std::cout << " same point :  " << same_point_num << " different point num  : " << different_point_num << endl;
+                }
+std::cout << " Track same point :  " << same_point_num << " Track different point num  : " << different_point_num << endl;
                 
 
                 // BA initialize
                 // Define CostFunction
                 ceres::Problem initilize_ba;
 
-                for ( int i = 0; i < map_storage.keyframe[0].pts.size(); i++)
+                for ( int i = 0; i < map_storage.keyframe[0].TrackPts.size(); i++)
                 {
-                    ceres::CostFunction* cost_func = ReprojectionError::create(map_storage.keyframe[0].pts[i], f, cv::Point2d(c.x, c.y));
+                    ceres::CostFunction* cost_func = ReprojectionError::create(map_storage.keyframe[0].TrackPts[i], f, cv::Point2d(c.x, c.y));
                     double* camera = (double*)(&map_storage.keyframe[0].cam_pose);
-                    double* X_ = (double*)(&(map_storage.world_xyz[i]));
+                    double* X_ = (double*)(&(map_storage.TrackMP[i]));
                     initilize_ba.AddResidualBlock(cost_func, new CauchyLoss(0.2), camera, X_); 
                 }            
                             
@@ -541,11 +581,13 @@ std::cout << " New Track feature num  : " << PrevTriangulateTrackPts.size() << e
 
                 PrevGoodMatches.clear();
                 PrevKeypoints.clear();
-                
-                PrevGoodMatches = CurrGoodMatches;
-                PrevKeypoints = CurrKeypoints;
-                PrevDescriptors = CurrDescriptors;
-                PrevMask = CurrMask;
+                PrevDescriptors.release();
+                PrevMask.release();
+
+                PrevGoodMatches.assign( CurrGoodMatches.begin(), CurrGoodMatches.end() );
+                PrevKeypoints.assign( CurrKeypoints.begin(), CurrKeypoints.end() );
+                PrevDescriptors = CurrDescriptors.clone();
+                PrevMask = CurrMask.clone();
             }
         
         
@@ -567,20 +609,24 @@ std::cout << " New Track feature num  : " << PrevTriangulateTrackPts.size() << e
             
             // Matching prev_image and current_image using optical flow
 std::cout << " before PnP track point num  : " << PrevPnPTrackPts.size() << std::endl;  
-            track_opticalflow_and_remove_err_for_SolvePnP(previous_image.frame, current_image.frame, PrevPnPTrackPts, CurrPnPTrackPts, MPforTrack);
-            PrevPnPTrackPts = CurrPnPTrackPts;
-            
-
+            // track_opticalflow_and_remove_err_for_SolvePnP(previous_image.frame, current_image.frame, PrevPnPTrackPts, CurrPnPTrackPts, MPforTrack);
+            // PrevPnPTrackPts = CurrPnPTrackPts;
+            track_opticalflow_and_remove_err_for_SolvePnP_(previous_image.frame, current_image.frame, previous_image.TrackPts, current_image.TrackPts, previous_image.TrackId, MPforTrack);
+            current_image.TrackId.clear();
+            for(int i = 0; i < current_image.TrackPts.size(); i++) current_image.TrackId.push_back(previous_image.TrackId[i]);
 
             
             // Calculate World R, t using SolvePnP
             std::cout << "SolvePnP" << endl;
 std::cout << "SolvePnP map_point num : " << "   " << MPforTrack.size() << endl;
-std::cout << "SolvePnP current_image_pts num : " << "   " << CurrPnPTrackPts.size() << endl;
+std::cout << "SolvePnP current_image_pts num : " << "   " << current_image.TrackPts.size() << endl;
             cv::Mat inliers;
-            cv::solvePnPRansac(MPforTrack, CurrPnPTrackPts, K, cv::noArray(), World_R, World_t, false, 100, SolvePnP_reprojection_error, 0.99, inliers );
+            MPforTrack.clear();
+            for(int i = 0; i < previous_image.TrackId.size(); i ++) MPforTrack.push_back(map_storage.TrackMP[current_image.TrackId[i]]);
+            cv::solvePnPRansac(MPforTrack, current_image.TrackPts, K, cv::noArray(), World_R, World_t, false, 100, SolvePnP_reprojection_error, 0.99, inliers, SolevePnPFlags );
             int SolvePnP_inlier_ratio = 100 * inliers.rows / MPforTrack.size();
-std::cout << " Track Inlier ratio : " << SolvePnP_inlier_ratio << " %" << endl;
+std::cout << " SolvePnP Track inlier num : " << inliers.rows << std::endl;            
+std::cout << " Track PnP Inlier ratio : " << SolvePnP_inlier_ratio << " %" << endl;
 
 
             // Calculate camera_pose
@@ -599,9 +645,9 @@ std::cout << " current cam pose " << std::endl << clone_CurrCamPose << std::endl
             // Motion only BA
             ceres::Problem motion_only_ba;
             
-            for ( int i = 0; i < MPforTrack.size(); i++)
+            for ( int i = 0; i < current_image.TrackPts.size(); i++)
             {
-                ceres::CostFunction* motion_only_cost_func = motion_only_ReprojectionError::create(CurrPnPTrackPts[i], MPforTrack[i], f, cv::Point2d(c.x, c.y));
+                ceres::CostFunction* motion_only_cost_func = motion_only_ReprojectionError::create(current_image.TrackPts[i], MPforTrack[i], f, cv::Point2d(c.x, c.y));
                 double* camera_ = (double*)(&current_image.cam_pose);
         
                 motion_only_ba.AddResidualBlock(motion_only_cost_func, new CauchyLoss(0.2), camera_); 
@@ -630,7 +676,7 @@ std::cout << " current cam pose " << std::endl << clone_CurrCamPose << std::endl
 ////////////////////////////////////// track for triangulate///////////////////////////////////////////////////////////////////////////////////////////
             
             std::cout << " Track for Triangulate " << endl;
-            track_opticalflow_and_remove_err_for_triangulate(previous_image.frame, current_image.frame, PrevTrackPts, CurrTrackPts, PrevTriangulateTrackPts);
+            TrackOpticalFlowAndRemoveErrForTriangulate(previous_image.frame, current_image.frame, PrevTrackPts, CurrTrackPts, PrevTriangulateTrackPts, TrackForTriangulatePtsID);
 std::cout  << " Curr Matching Track point num :  " << CurrTrackPts.size() << std::endl;       
                 
 
@@ -640,7 +686,7 @@ std::cout  << " Curr Matching Track point num :  " << CurrTrackPts.size() << std
             
             // track_overlap_ratio 
             track_overlap_ratio = 100 * CurrTrackPts.size() / track_entire_num;
-std::cout << "  track inlier ratio : " << track_overlap_ratio << endl;
+std::cout << "  Track overlap ratio : " << track_overlap_ratio << endl;
 
             // Rotation value 
 std::cout << "previous vec6d value : " << previous_image.cam_pose << endl;
@@ -696,18 +742,39 @@ std::cout << " Rotation difference : " << rotation_difference << endl;
                 
                 // Remove trackMP Outlier ( remove back MP ? and PnP outlier )
 std::cout << " TrackMP size before remove outlier : " <<  MPforTrack.size() << endl;
-                remove_map_point_and_2dpoint_outlier(MPforTrack,  CurrTrackPts, vec6d_to_homogenous_campose(current_image.cam_pose));
+                RemoveTrackMPOutlier(map_storage, MPforTrack,  CurrTrackPts, keyframe_num, vec6d_to_homogenous_campose(current_image.cam_pose), TrackForTriangulatePtsID);
 std::cout << " TrackMP size after remove back outlier : " <<  MPforTrack.size() << endl;               
 
-                cv::Mat rot, tran, inliers;
-                cv::solvePnPRansac(MPforTrack, CurrTrackPts, K, cv::noArray(), rot, tran, false, 100, SolvePnP_reprojection_error, 0.99, inliers );
+                cv::Mat rot, tran, rottran, inliers;
+                cv::solvePnPRansac(MPforTrack, CurrTrackPts, K, cv::noArray(), rot, tran, false, 100, SolvePnP_reprojection_error, 0.99, inliers, SolevePnPFlags );
                 int BeforeRemovePnPOutlierNum = CurrTrackPts.size();
-                RemovePnPOutlier(MPforTrack, CurrTrackPts, inliers);
+                RemoveTrackMPPnPOutlier(MPforTrack, CurrTrackPts, inliers, TrackForTriangulatePtsID);
 std::cout << " TrackMP size after remove SolvePnP outlier : " <<  MPforTrack.size() << endl;               
 
 std::cout << keyframe_num << "  keyframe Track PnP Inlier rate : " << 100 * inliers.rows / BeforeRemovePnPOutlierNum << endl;
-
+                cv::Rodrigues(rot, rot);
+                rottran = R_t_to_homogenous(rot, tran);
+std::cout << " SolvePnP Track outlier Test pose : " << std::endl << rottran.inv() << std::endl;
                 PrevPnPTrackPts = CurrTrackPts;
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                
+                // Storage Track Pts,ID
+                current_image.TrackPts.clear();
+                current_image.TrackId.clear();
+                for(int i = 0; i < CurrTrackPts.size(); i++){
+                    current_image.TrackPts.push_back(CurrTrackPts[i]);
+                    current_image.TrackId.push_back(TrackForTriangulatePtsID[i]);
+                    
+                    if(map_storage.TrackMP.find(TrackForTriangulatePtsID[i]) == map_storage.TrackMP.end())
+                    {
+
+                            map_storage.TrackMP.insert(std::pair<int, cv::Point3d>(TrackForTriangulatePtsID[i], MPforTrack[i]));
+
+
+                    }
+                }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////       Triangulate for Map  /////////////////////////////////////////////////////////////
                 
@@ -733,24 +800,47 @@ std::cout << keyframe_num << "  keyframe Track PnP Inlier rate : " << 100 * inli
                 std::vector<cv::DMatch> matches;
                 matcher -> match(PrevDescriptors, CurrDescriptors, matches);
                 std::sort(matches.begin(), matches.end());
-                std::vector<cv::DMatch> good_matches(matches.begin(), matches.begin() + 300);
                 CurrGoodMatches.clear();
-                CurrGoodMatches = good_matches;
+                CurrGoodMatches = matches;
+std::cout << "During 4000 ,,, Best Distance : " << CurrGoodMatches[0].distance << "     " <<
+                        " Median Distance : " << CurrGoodMatches[2000].distance << "    " <<
+                        " Worst Distance : " << CurrGoodMatches[3990].distance << std::endl;
                 PrevPts.clear();
                 CurrPts.clear();
+                for(size_t i = 0; i < matches.size(); i++)
+                {
+                    PrevPts.push_back(PrevKeypoints[matches[i].queryIdx].pt);
+                    CurrPts.push_back(CurrKeypoints[matches[i].trainIdx].pt);
+                } 
+                
+                // Remove Essential Outlier
+                RemoveEssentialOutlier(map_storage, PrevPts, CurrPts, keyframe_num, K);
+                
+                // Good Match
+                GoodMatch(map_storage, keyframe_num, 300);
+std::cout << " During remove Essential  ,,, Best Distance : " << CurrGoodMatches[map_storage.MapMatchIdx[keyframe_num][0]].distance << std::endl;
 
-                // cv::Mat img_matches;
+                PrevPts.clear();
+                CurrPts.clear();
+                for(size_t i = 0; i < map_storage.MapMatchIdx[keyframe_num].size(); i++)
+                {
+                    PrevPts.push_back(PrevKeypoints[matches[map_storage.MapMatchIdx[keyframe_num][i]].queryIdx].pt);
+                    CurrPts.push_back(CurrKeypoints[matches[map_storage.MapMatchIdx[keyframe_num][i]].trainIdx].pt);
+                }
+                // // drawing the results
+                // std::vector<cv::DMatch> DrawMatch;
+                // Mat img_matches;
+                // for(int i = 0; i < map_storage.MapMatchIdx[keyframe_num].size(); i++)
+                // {
+                //     DrawMatch.push_back(matches[map_storage.MapMatchIdx[keyframe_num][i]]);
+                // }
+                // std::cout << DrawMatch.size() << std::endl;
+                
                 // cv::drawMatches(map_storage.keyframe[keyframe_num - 1].frame, PrevKeypoints, current_image.frame, CurrKeypoints,
-                //     CurrGoodMatches, img_matches, Scalar::all(-1), Scalar::all(-1),
+                //     DrawMatch, img_matches, Scalar::all(-1), Scalar::all(-1),
                 //     std::vector<char>(), DrawMatchesFlags::NOT_DRAW_SINGLE_POINTS);
                 // cv::imshow("matches", img_matches);
                 // cv::waitKey();
-
-                for(size_t i = 0; i < CurrGoodMatches.size(); i++)
-                {
-                    PrevPts.push_back(PrevKeypoints[CurrGoodMatches[i].queryIdx].pt);
-                    CurrPts.push_back(CurrKeypoints[CurrGoodMatches[i].trainIdx].pt);
-                } 
 
                 cv::triangulatePoints(P0, P1, PrevPts, CurrPts, X);
                 world_xyz_point_to_homogenous(X);
@@ -764,27 +854,56 @@ std::cout << keyframe_num << "  keyframe Track PnP Inlier rate : " << 100 * inli
 
                 // Remove MP Outlier ( remove back MP ? and PnP outlier )
 std::cout << " MP size before remove outlier : " <<  CurrMP.size() << endl;
-                remove_map_point_and_2dpoint_outlier(CurrMP,  CurrPts, vec6d_to_homogenous_campose(current_image.cam_pose));
+                RemoveMPOutlier(map_storage, CurrMP,  CurrPts, keyframe_num, vec6d_to_homogenous_campose(current_image.cam_pose));
 std::cout << " MP size after remove back outlier : " <<  CurrMP.size() << endl;               
 
                 
-                cv::solvePnPRansac(CurrMP, CurrPts, K, cv::noArray(), rot, tran, false, 100, SolvePnP_reprojection_error, 0.99, inliers );
+                cv::solvePnPRansac(CurrMP, CurrPts, K, cv::noArray(), rot, tran, false, 100, SolvePnP_reprojection_error, 0.99, inliers, SolevePnPFlags );
                 BeforeRemovePnPOutlierNum = CurrPts.size();
-                RemovePnPOutlier(CurrMP, CurrPts, inliers);
+                RemoveMPPnPOutlier(map_storage, CurrMP, CurrPts, inliers, keyframe_num);
 std::cout << " MP size after remove SolvePnP outlier : " <<  CurrMP.size() << endl;               
 
-std::cout << keyframe_num << "  keyframe MP PnP Inlier rate : " << 100 * inliers.rows / BeforeRemovePnPOutlierNum << endl;                
+std::cout << keyframe_num << "th  keyframe MP PnP Inlier rate : " << 100 * inliers.rows / BeforeRemovePnPOutlierNum << endl;                
+
+                cv::Rodrigues(rot, rot);
+                rottran = R_t_to_homogenous(rot, tran);
+std::cout << " SolvePnP Track outlier Test pose : " << std::endl << rottran.inv() << std::endl;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////                
-
+                
                 // Storage pts, pts_id, lankmark
-                for(int i = 0; i < CurrPts.size(); i++) 
-                {
-                    map_storage.world_xyz.insert(std::pair<int, cv::Point3d>(feature_max_ID, CurrMP[i]));
-                    current_image.pts_id.push_back(feature_max_ID);
-                    feature_max_ID++;
-                }    
+                int NewCnt(0), OldCnt(0);
+                for(int i = 0; i < map_storage.MapMatchIdx[keyframe_num].size(); i++){
+                    
+                    bool NewID = true;
+                    int CurrQueryIdx = CurrGoodMatches[map_storage.MapMatchIdx[keyframe_num][i]].queryIdx;
+                    
+                    for(int j = 0; j < map_storage.MapMatchIdx[keyframe_num - 1].size(); j++){
+
+                        // Same Point -> Same ID
+                        int PrevTrainIdx = PrevGoodMatches[map_storage.MapMatchIdx[keyframe_num - 1][j]].trainIdx;
+                        if(CurrQueryIdx == PrevTrainIdx){
+                            int id = map_storage.keyframe[keyframe_num - 1].pts_id[j];
+                            current_image.pts_id.push_back(id);
+                            NewID = false;
+                            OldCnt++;
+                            break;
+                        }
+                        
+                    }
+                    // Different Point -> New ID
+                    if(NewID){
+
+                        map_storage.world_xyz.insert(std::pair<int, cv::Point3d>(feature_max_ID, CurrMP[i]));
+                        current_image.pts_id.push_back(feature_max_ID);
+                        feature_max_ID++;
+                        NewCnt++;
+                    }
+                }
+                std::cout << std::endl;
+                std::cout << " new point num : " << NewCnt << "         " << " present point num : " << OldCnt << std::endl;
+
                 std::cout << std::endl;
                 for(int i = 0; i < CurrPts.size(); i++) current_image.pts.push_back(CurrPts[i]);
 
@@ -794,8 +913,8 @@ std::cout << keyframe_num << "  keyframe MP PnP Inlier rate : " << 100 * inliers
                 frame_storage.push_back(copy_current_image);
 
                 // storage id - keyframe
-                map_storage.keyframe.insert(std::pair<int, Frame>(keyframe_num, frame_storage[times]));
-cv::imshow(" keyframe image ", map_storage.keyframe[keyframe_num].frame);
+                map_storage.keyframe[keyframe_num] = frame_storage[times];
+cv::imshow(" keyframe image ", (map_storage.keyframe[keyframe_num]).frame);
 std::cout << "@@@@@@@@@@ First keyframe selection @@@@@@@" << std::endl 
 << " keyframe num is  : " << keyframe_num << endl;                    
 
@@ -813,42 +932,42 @@ std::cout << " Total Landmark's num : " << map_storage.world_xyz.size() << std::
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-//                 // storage landmark id
-//                 std::vector<cv::Point2f> clone_current_track_point_for_triangulate(current_track_point_for_triangulate);
-//                 std::vector<cv::Point3d> clone_map_point(map_point);
-//                 std::vector<int> clone_previous_track_point_for_triangulate_ID(previous_track_point_for_triangulate_ID);
+                // // storage landmark id
+                // std::vector<cv::Point2f> clone_current_track_point_for_triangulate(current_track_point_for_triangulate);
+                // std::vector<cv::Point3d> clone_map_point(map_point);
+                // std::vector<int> clone_previous_track_point_for_triangulate_ID(previous_track_point_for_triangulate_ID);
                 
-//                     int indexCorrect = 0;
-//                 for(int i = 0; i < clone_current_track_point_for_triangulate.size(); i++)
-//                 {
-//                     if(map_storage.world_xyz.find(clone_previous_track_point_for_triangulate_ID[i]) == map_storage.world_xyz.end())
-//                     {
+                //     int indexCorrect = 0;
+                // for(int i = 0; i < clone_current_track_point_for_triangulate.size(); i++)
+                // {
+                //     if(map_storage.world_xyz.find(clone_previous_track_point_for_triangulate_ID[i]) == map_storage.world_xyz.end())
+                //     {
 
-//                             map_storage.world_xyz.insert(std::pair<int, cv::Point3d>(clone_previous_track_point_for_triangulate_ID[i], clone_map_point[i]));
+                //             map_storage.world_xyz.insert(std::pair<int, cv::Point3d>(clone_previous_track_point_for_triangulate_ID[i], clone_map_point[i]));
 
 
-//                     }
-//                     else 
-//                     {
+                //     }
+                //     else 
+                //     {
 
-//                     double diff_3d_x = std::abs(clone_map_point[i].x - map_storage.world_xyz[clone_previous_track_point_for_triangulate_ID[i]].x);
-//                     double diff_3d_y = std::abs(clone_map_point[i].y - map_storage.world_xyz[clone_previous_track_point_for_triangulate_ID[i]].y);
-//                     double diff_3d_z = std::abs(clone_map_point[i].z - map_storage.world_xyz[clone_previous_track_point_for_triangulate_ID[i]].z);
+                //     double diff_3d_x = std::abs(clone_map_point[i].x - map_storage.world_xyz[clone_previous_track_point_for_triangulate_ID[i]].x);
+                //     double diff_3d_y = std::abs(clone_map_point[i].y - map_storage.world_xyz[clone_previous_track_point_for_triangulate_ID[i]].y);
+                //     double diff_3d_z = std::abs(clone_map_point[i].z - map_storage.world_xyz[clone_previous_track_point_for_triangulate_ID[i]].z);
                     
-//                         if(diff_3d_x < 3.0 and diff_3d_y < 3.0 and diff_3d_z < 3.0)
-//                         {
-//                             map_point[i - indexCorrect] = map_storage.world_xyz[clone_previous_track_point_for_triangulate_ID[i]];
-//                         }
-//                         else
-//                         {
-//                             current_track_point_for_triangulate.erase(current_track_point_for_triangulate.begin() + i - indexCorrect );
-//                             map_point.erase(map_point.begin() + i - indexCorrect );
-//                             previous_track_point_for_triangulate_ID.erase(previous_track_point_for_triangulate_ID.begin() + i - indexCorrect);
-//                             indexCorrect++;
+                //         if(diff_3d_x < 3.0 and diff_3d_y < 3.0 and diff_3d_z < 3.0)
+                //         {
+                //             map_point[i - indexCorrect] = map_storage.world_xyz[clone_previous_track_point_for_triangulate_ID[i]];
+                //         }
+                //         else
+                //         {
+                //             current_track_point_for_triangulate.erase(current_track_point_for_triangulate.begin() + i - indexCorrect );
+                //             map_point.erase(map_point.begin() + i - indexCorrect );
+                //             previous_track_point_for_triangulate_ID.erase(previous_track_point_for_triangulate_ID.begin() + i - indexCorrect);
+                //             indexCorrect++;
 
-//                         }
-//                     }
-//                 }
+                //         }
+                //     }
+                // }
 
 
 //                 // Storage SolvePnP inlier index
@@ -902,64 +1021,64 @@ std::cout << " Total Landmark's num : " << map_storage.world_xyz.size() << std::
 // /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-//                 ceres::Problem keyframe_ba;
-//                 int p1 = 0;
-//                 if(keyframe_num - active_keyframe_num + 1 < 0) p1 = keyframe_num - active_keyframe_num + 1;
-//                 else p1 = 0;
+                ceres::Problem keyframe_ba;
+                int p1 = 0;
+                if(keyframe_num - active_keyframe_num + 1 < 0) p1 = keyframe_num - active_keyframe_num + 1;
+                else p1 = 0;
                 
-//                 for(int j = keyframe_num - active_keyframe_num + 1 - p1; j < keyframe_num + 1; j++)
-//                 {
-// std::cout << " active keyframe num  : " << j << endl;                        
-//                     for ( int i = 0; i < inlier_storage[j].rows; i++)
-//                     {
-//                         ceres::CostFunction* keyframe_cost_func = ReprojectionError::create(map_storage.keyframe[j].pts[inlier_storage[j].at<int>(i, 0)], f, cv::Point2d(c.x, c.y));
+                for(int j = keyframe_num - active_keyframe_num + 1 - p1; j < keyframe_num + 1; j++)
+                {
+std::cout << " active keyframe num  : " << j << endl;                        
+                    for ( int i = 0; i < map_storage.keyframe[j].pts.size(); i++)
+                    {
+                        ceres::CostFunction* keyframe_cost_func = ReprojectionError::create(map_storage.keyframe[j].pts[i], f, cv::Point2d(c.x, c.y));
 
-//                         double* camera = (double*)(&map_storage.keyframe[j].cam_pose);
-//                         int id_ = map_storage.keyframe[j].pts_id[inlier_storage[j].at<int>(i, 0)];
-//                         double* X_ = (double*)(&(map_storage.world_xyz[id_]));
-//                         keyframe_ba.AddResidualBlock(keyframe_cost_func, NULL, camera, X_); 
+                        double* camera = (double*)(&map_storage.keyframe[j].cam_pose);
+                        int id_ = map_storage.keyframe[j].pts_id[i];
+                        double* X_ = (double*)(&(map_storage.world_xyz[id_]));
+                        keyframe_ba.AddResidualBlock(keyframe_cost_func, NULL, camera, X_); 
 
-//                     }            
-//                 }
+                    }            
+                }
 
-//                 int p2 = 0;
-//                 if(keyframe_num - active_keyframe_num + 1 - fix_keyframe_num < 0) p2 = keyframe_num - active_keyframe_num + 1 - fix_keyframe_num;
-//                 else p2 = 0;
+                int p2 = 0;
+                if(keyframe_num - active_keyframe_num + 1 - fix_keyframe_num < 0) p2 = keyframe_num - active_keyframe_num + 1 - fix_keyframe_num;
+                else p2 = 0;
 
-//                 for(int j = keyframe_num - active_keyframe_num + 1 - fix_keyframe_num - p2; j < keyframe_num - active_keyframe_num + 1; j++)
-//                 {
-// std::cout << " fixed keyframe num  : " << j << endl;                         
-//                     for ( int i = 0; i < inlier_storage[j].rows; i++)
-//                     {
-//                         ceres::CostFunction* fix_keyframe_cost_func = map_point_only_ReprojectionError::create(map_storage.keyframe[j].pts[inlier_storage[j].at<int>(i, 0)], map_storage.keyframe[j].cam_pose, f, cv::Point2d(c.x, c.y));
-//                         int id_ = map_storage.keyframe[j].pts_id[inlier_storage[j].at<int>(i, 0)];
-//                         double* X_ = (double*)(&(map_storage.world_xyz[id_]));
-//                         keyframe_ba.AddResidualBlock(fix_keyframe_cost_func, NULL, X_); 
+                for(int j = keyframe_num - active_keyframe_num + 1 - fix_keyframe_num - p2; j < keyframe_num - active_keyframe_num + 1; j++)
+                {
+std::cout << " fixed keyframe num  : " << j << endl;                         
+                    for ( int i = 0; i < map_storage.keyframe[j].pts.size(); i++)
+                    {
+                        ceres::CostFunction* fix_keyframe_cost_func = map_point_only_ReprojectionError::create(map_storage.keyframe[j].pts[i], map_storage.keyframe[j].cam_pose, f, cv::Point2d(c.x, c.y));
+                        int id_ = map_storage.keyframe[j].pts_id[i];
+                        double* X_ = (double*)(&(map_storage.world_xyz[id_]));
+                        keyframe_ba.AddResidualBlock(fix_keyframe_cost_func, NULL, X_); 
                                 
-//                     }            
-//                 }                    
+                    }            
+                }                    
                                 
                                 
-//                 // ceres option       
-//                 ceres::Solver::Options options;
-//                 // options.max_num_iterations = 50;
-//                 // options.gradient_tolerance = 1e-9;
-//                 // options.function_tolerance = 1e-9;
-//                 options.linear_solver_type = ceres::ITERATIVE_SCHUR;
-//                 options.num_threads = 8;
-//                 options.minimizer_progress_to_stdout = false;
-//                 ceres::Solver::Summary summary;
+                // ceres option       
+                ceres::Solver::Options options;
+                // options.max_num_iterations = 50;
+                // options.gradient_tolerance = 1e-9;
+                // options.function_tolerance = 1e-9;
+                options.linear_solver_type = ceres::ITERATIVE_SCHUR;
+                options.num_threads = 8;
+                options.minimizer_progress_to_stdout = false;
+                ceres::Solver::Summary summary;
 
-//                 // Camera pose and map_point before BA
-//                 std::cout <<" camera pose before keyframe BA " << endl;
-//                 for(int j = keyframe_num - active_keyframe_num + 1 - p1; j < keyframe_num + 1; j++) std::cout << " keyframe num : " << j << endl << vec6d_to_homogenous_campose(map_storage.keyframe[j].cam_pose) << endl;
+                // Camera pose and map_point before BA
+                std::cout <<" camera pose before keyframe BA " << endl;
+                for(int j = keyframe_num - active_keyframe_num + 1 - p1; j < keyframe_num + 1; j++) std::cout << " keyframe num : " << j << endl << vec6d_to_homogenous_campose(map_storage.keyframe[j].cam_pose) << endl;
                     
-//                 // solve
-//                 ceres::Solve(options, &keyframe_ba, &summary);                
+                // solve
+                ceres::Solve(options, &keyframe_ba, &summary);                
                     
-//                 // Camera pose and map_point after BA
-//                 std::cout << endl << " camera pose after keyframe BA " << endl;
-//                 for(int j = keyframe_num - active_keyframe_num + 1 - p1; j < keyframe_num + 1; j++) std::cout << " keyframe num : " << j << endl << vec6d_to_homogenous_campose(map_storage.keyframe[j].cam_pose) << endl;                
+                // Camera pose and map_point after BA
+                std::cout << endl << " camera pose after keyframe BA " << endl;
+                for(int j = keyframe_num - active_keyframe_num + 1 - p1; j < keyframe_num + 1; j++) std::cout << " keyframe num : " << j << endl << vec6d_to_homogenous_campose(map_storage.keyframe[j].cam_pose) << endl;                
 
 
 
@@ -1275,61 +1394,56 @@ std::cout << " Total Landmark's num : " << map_storage.world_xyz.size() << std::
                 // new feature to track
                 std::cout << " New Track Feature " << endl;
                 cv::goodFeaturesToTrack(current_image.frame, CurrTrackPts, max_keypoint, 0.01, 10);
+                PrevTriangulateTrackPts.clear();
                 PrevTriangulateTrackPts = CurrTrackPts;
 std::cout << " New Track feature num  : " << PrevTriangulateTrackPts.size() << endl; 
                 track_entire_num = PrevTriangulateTrackPts.size();
                     
-//                 keyframe_track_point.clear();
-//                 for(int i = 0; i < current_track_point_for_triangulate.size(); i++) keyframe_track_point.push_back(current_track_point_for_triangulate[i]);            
-                
-//                 previous_track_point_for_triangulate_ID.clear();
-//                 std::vector<cv::Point2f> clone_pts(current_image.pts);
-//                 std::vector<int> clone_pts_id(current_image.pts_id);
-//                 int same_point_num(0), different_point_num(0);
-// std::cout << " remain feature num : " << current_image.pts.size() << endl;
-                
-                
-//                 // feature corresponding 
-//                 for(int j =0; j < current_track_point_for_triangulate.size(); j++)
-//                 {
-//                     bool found_pts2d = false;
-//                     for(int i = 0; i < clone_pts.size(); i++)
-//                     {
-//                         double difference_point2d_x = cv::abs(clone_pts[i].x - current_track_point_for_triangulate[j].x);
-//                         double difference_point2d_y = cv::abs(clone_pts[i].y - current_track_point_for_triangulate[j].y);
+                // Correspondance New Feature
+                TrackForTriangulatePtsID.clear();
+                std::vector<cv::Point2f> clone_pts(current_image.TrackPts);
+                std::vector<int> clone_pts_id(current_image.TrackId);
+                int same_point_num(0), different_point_num(0);
 
-//                         if(difference_point2d_x < 3.0 and difference_point2d_y < 3.0)
-//                         {
-//                             found_pts2d = true;
-//                             previous_track_point_for_triangulate_ID.push_back(clone_pts_id[i]);
-//                             clone_pts.erase(clone_pts.begin() + i);
-//                             clone_pts_id.erase(clone_pts_id.begin() + i);
-//                             same_point_num++;
-//                             break;
-//                         }
-//                     }
+                for(int j = 0; j < CurrTrackPts.size(); j++)
+                {
+                    bool DifferentPts = true;
+                    for(int i = 0; i < clone_pts.size(); i++)
+                    {
+                        double difference_point2d_x = cv::abs(clone_pts[i].x - CurrTrackPts[j].x);
+                        double difference_point2d_y = cv::abs(clone_pts[i].y - CurrTrackPts[j].y);
+
+                        if(difference_point2d_x < 3.0 and difference_point2d_y < 3.0)
+                        {
+                            TrackForTriangulatePtsID.push_back(clone_pts_id[i]);
+                            clone_pts.erase(clone_pts.begin() + i);
+                            clone_pts_id.erase(clone_pts_id.begin() + i);
+                            same_point_num++;
+                            DifferentPts = false;
+                            break;
+                        }
+                    }
                     
-//                     if(found_pts2d) found_pts2d= false;
-//                     else
-//                     {
-//                         different_point_num++;
-//                         feature_max_ID++;
-//                         previous_track_point_for_triangulate_ID.push_back(feature_max_ID);
-//                     }
+                    if(DifferentPts)
+                    {
+                        TrackForTriangulatePtsID.push_back(TrackFeatureMaxID);
+                        different_point_num++;
+                        TrackFeatureMaxID++;
+                    }
 
-//                 }
-
-// std::cout << "total new feature : " << current_track_point_for_triangulate.size() << endl;
-// std::cout << " same point :  " << same_point_num << " different point num  : " << different_point_num << endl;
+                }
+std::cout << " Track same point :  " << same_point_num << " Track different point num  : " << different_point_num << endl;
 
                 PrevGoodMatches.clear();
                 PrevKeypoints.clear();
+                PrevDescriptors.release();
+                PrevMask.release();
 
 
-                PrevGoodMatches = CurrGoodMatches;
-                PrevKeypoints = CurrKeypoints;
-                PrevDescriptors = CurrDescriptors;
-                PrevMask = CurrMask;
+                PrevGoodMatches.assign( CurrGoodMatches.begin(), CurrGoodMatches.end() );
+                PrevKeypoints.assign( CurrKeypoints.begin(), CurrKeypoints.end() );
+                PrevDescriptors = CurrDescriptors.clone();
+                PrevMask = CurrMask.clone();
             }
 
 //             previous_track_point_for_triangulate.clear();
@@ -1475,8 +1589,10 @@ std::cout << " New Track feature num  : " << PrevTriangulateTrackPts.size() << e
         glFlush();
 
 //         // glClearColor(1.0,1.0,1.0, 1.0);
-        if (new_keyframe_selection) new_keyframe_selection = false;
-     
+        if (new_keyframe_selection) {
+            new_keyframe_selection = false;
+            // cv::waitKey();
+        }
         
 //         if(loop_detect)
 //         {
@@ -1486,7 +1602,8 @@ std::cout << " New Track feature num  : " << PrevTriangulateTrackPts.size() << e
 //         }
 
         cv::imshow("currentimage", current_image.frame);
-
+        
+        PrevTrackPts.clear();
         PrevTrackPts = CurrTrackPts;
         previous_image = current_image;
         ++times;
