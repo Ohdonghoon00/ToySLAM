@@ -23,8 +23,8 @@ include_directories(
 
 
 add_executable(toyslam_main
-toy_slam_ORBmap2.cpp
-# toyslam_main.cpp
+# toy_slam_ORBmap2.cpp
+toyslam_main.cpp
     gurobi_helper.cpp
 )
 

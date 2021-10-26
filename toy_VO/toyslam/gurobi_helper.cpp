@@ -45,6 +45,7 @@ Eigen::MatrixXd CalculateVisibilityMatrix(Map& map_data, std::vector<cv::Mat> In
 {
     Eigen::MatrixXd A(map_data.keyframe.size(), map_data.InlierID.size()); 
     A.setZero();
+    int num = 0;
     for(int i = 0; i < A.rows(); i++ )
         {
             // std::cout << std::endl;
@@ -54,7 +55,10 @@ Eigen::MatrixXd CalculateVisibilityMatrix(Map& map_data, std::vector<cv::Mat> In
                 int id = map_data.keyframe[i].pts_id[Inlier_ST[i].at<int>(j, 0)];
                 auto index = find(map_data.InlierID.begin(), map_data.InlierID.end(), id) - map_data.InlierID.begin();
                 A(i, index) = 1.0;
+                num++;
             }
+                std::cout << "num : " << num << std::endl;
+
         }
 
     return A;
